@@ -129,9 +129,11 @@ void SampleMenuView::ShowSearch() {
 }
 
 void SampleMenuView::PrintSampleTable(const std::vector<Model::Sample>& samples) const {
+    // 시료명 컬럼은 한글이 섞이므로 std::setw(바이트 기준) 대신 PadDisplayWidth(화면 폭 기준)를 사용한다.
+    constexpr int kNameColumnWidth = 22;
     std::cout << std::left
                << std::setw(8) << "ID"
-               << std::setw(22) << "시료명"
+               << PadDisplayWidth("시료명", kNameColumnWidth)
                << std::setw(14) << "평균 생산시간"
                << std::setw(8) << "수율"
                << std::setw(10) << "현재 재고" << "\n";
@@ -139,7 +141,7 @@ void SampleMenuView::PrintSampleTable(const std::vector<Model::Sample>& samples)
     for (const auto& sample : samples) {
         std::cout << std::left
                    << std::setw(8) << sample.id
-                   << std::setw(22) << sample.name
+                   << PadDisplayWidth(sample.name, kNameColumnWidth)
                    << std::setw(14) << (FormatNumber(sample.avgProductionTimeMin) + " min/ea")
                    << std::setw(8) << FormatNumber(sample.yieldRate)
                    << std::setw(10) << (std::to_string(sample.stock) + " ea") << "\n";

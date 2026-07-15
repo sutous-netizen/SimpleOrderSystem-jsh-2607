@@ -39,13 +39,16 @@ void MonitoringView::ShowOrderCounts() {
 }
 
 void MonitoringView::ShowInventory() {
+    // 시료명 컬럼은 한글이 섞이므로 std::setw(바이트 기준) 대신 PadDisplayWidth(화면 폭 기준)를 사용한다.
+    constexpr int kSampleColumnWidth = 22;
+
     std::cout << "\n재고 현황\n";
-    std::cout << std::left << std::setw(22) << "시료명" << std::setw(10) << "재고" << "상태\n";
+    std::cout << std::left << PadDisplayWidth("시료명", kSampleColumnWidth) << std::setw(10) << "재고" << "상태\n";
 
     const auto inventory = orderService_.GetInventoryStatus();
     for (const auto& item : inventory) {
         std::cout << std::left
-                   << std::setw(22) << item.sample.name
+                   << PadDisplayWidth(item.sample.name, kSampleColumnWidth)
                    << std::setw(10) << (std::to_string(item.sample.stock) + " ea")
                    << Model::ToString(item.state) << "\n";
     }

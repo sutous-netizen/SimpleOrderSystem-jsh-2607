@@ -163,3 +163,23 @@ TEST_F(ConsoleUtilTest, ReadYesNo_ExhaustedInput_ReturnsFalseWithoutInfiniteLoop
     SetInput(""); // 즉시 EOF
     EXPECT_FALSE(Console::ReadYesNo("prompt > "));
 }
+
+// PadDisplayWidth: ASCII 문자열은 std::setw 와 동일하게 부족한 만큼 오른쪽에 공백을 채운다.
+TEST_F(ConsoleUtilTest, PadDisplayWidth_AsciiOnly_PadsToTargetWidth) {
+    const std::string result = Console::PadDisplayWidth("ID001", 8);
+    EXPECT_EQ(result, "ID001   ");
+    EXPECT_EQ(result.size(), static_cast<size_t>(8));
+}
+
+// PadDisplayWidth: 한글(멀티바이트 UTF-8)이 섞인 문자열은 "화면 표시 폭" 기준으로 패딩한다.
+// 한글 1글자는 화면 폭 2 로 근사하므로, "웨이퍼"(3글자, 폭 6)를 목표 폭 10 에 맞추면 공백 4칸이 붙는다.
+TEST_F(ConsoleUtilTest, PadDisplayWidth_KoreanText_PadsUsingDisplayWidthApproximation) {
+    const std::string result = Console::PadDisplayWidth("웨이퍼", 10);
+    EXPECT_EQ(result, "웨이퍼    ");
+}
+
+// PadDisplayWidth: 화면 표시 폭이 이미 목표 너비 이상이면 자르지 않고 원본 그대로 반환한다.
+TEST_F(ConsoleUtilTest, PadDisplayWidth_AlreadyExceedsTargetWidth_ReturnsUnchanged) {
+    const std::string result = Console::PadDisplayWidth("실리콘 웨이퍼-8인치", 5);
+    EXPECT_EQ(result, "실리콘 웨이퍼-8인치");
+}

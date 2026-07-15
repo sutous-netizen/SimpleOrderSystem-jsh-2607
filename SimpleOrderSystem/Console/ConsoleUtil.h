@@ -33,4 +33,13 @@ bool IsInputExhausted();
 // 입력 스트림이 고갈된 경우 무한루프를 피하기 위해 false(취소)를 반환한다.
 bool ReadYesNo(const std::string& prompt);
 
+// UTF-8 문자열의 "화면 표시 너비"를 근사 계산해 targetWidth 만큼 오른쪽에 공백을 채운다(왼쪽 정렬).
+// std::setw 는 문자열의 바이트 수를 기준으로 패딩하기 때문에, 한글처럼 1글자가 여러 바이트인
+// 멀티바이트 UTF-8 문자열이 섞이면 표 컬럼이 어긋난다. 이 함수는 다음 규칙으로 화면 폭을 근사한다.
+//   - ASCII(0x00~0x7F) 1바이트 = 화면 폭 1
+//   - UTF-8 continuation byte(0x80~0xBF) = 폭 계산에서 제외(선행 바이트에서 이미 폭을 반영)
+//   - 그 외(멀티바이트 시퀀스의 시작 바이트, 한글 등) = 화면 폭 2로 근사
+// 문자열의 화면 폭이 이미 targetWidth 이상이면 자르지 않고 그대로 반환한다.
+std::string PadDisplayWidth(const std::string& text, int targetWidth);
+
 } // namespace Console

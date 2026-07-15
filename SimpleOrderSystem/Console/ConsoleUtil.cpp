@@ -127,4 +127,30 @@ bool ReadYesNo(const std::string& prompt) {
     }
 }
 
+namespace {
+// UTF-8 바이트 하나의 화면 표시 폭 기여도를 반환한다.
+// continuation byte(0x80~0xBF)는 0(선행 바이트에서 이미 폭을 계산했으므로 무시),
+// ASCII(0x00~0x7F)는 1, 그 외 멀티바이트 시퀀스의 시작 바이트는 2로 근사한다.
+int DisplayWidthOf(unsigned char byte) {
+    if (byte >= 0x80 && byte <= 0xBF) {
+        return 0;
+    }
+    if (byte <= 0x7F) {
+        return 1;
+    }
+    return 2;
+}
+} // namespace
+
+std::string PadDisplayWidth(const std::string& text, int targetWidth) {
+    int width = 0;
+    for (const unsigned char byte : text) {
+        width += DisplayWidthOf(byte);
+    }
+    if (width >= targetWidth) {
+        return text;
+    }
+    return text + std::string(static_cast<size_t>(targetWidth - width), ' ');
+}
+
 } // namespace Console

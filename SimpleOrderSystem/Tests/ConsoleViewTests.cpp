@@ -8,6 +8,8 @@
 #include "Mocks/MockDataStore.h"
 #include "../Console/OrderMenuView.h"
 #include "../Console/SampleMenuView.h"
+#include "../Console/ApprovalMenuView.h"
+#include "../Console/ReleaseMenuView.h"
 #include "../Monitor/OrderService.h"
 
 #include <iostream>
@@ -148,4 +150,52 @@ TEST_F(ConsoleViewTest, SampleMenuView_InvalidYieldRetries_EventuallyRegistersSa
     EXPECT_EQ(samples[0].name, "테스트시료");
     EXPECT_DOUBLE_EQ(samples[0].avgProductionTimeMin, 5.0);
     EXPECT_DOUBLE_EQ(samples[0].yieldRate, 0.9);
+}
+
+// ApprovalMenuView: 번호 선택 재시도 도중 표준 입력이 고갈되면 무한루프 없이 취소되고,
+// 대기 중인 주문(RESERVED)의 상태가 그대로 유지된다.
+TEST_F(ConsoleViewTest, ApprovalMenuView_ExhaustedInput_CancelsWithoutInfiniteLoop) {
+    fake.SaveSamples({ MakeSample("S-001", "실리콘 웨이퍼-8인치", 5.0, 1.0, 480) });
+
+    Monitor::OrderService orderService(mock);
+    orderService.PlaceOrder("S-001", "SK하이닉스", 150);
+
+    Console::ApprovalMenuView view(mock, orderService);
+
+    SetInput(""); // 즉시 EOF (번호 선택 프롬프트에서 바로 고갈)
+
+    testing::internal::CaptureStdout();
+    view.Run();
+    testing::internal::GetCapturedStdout();
+
+    const std::vector<Model::Order> orders = fake.LoadOrders();
+    ASSERT_EQ(orders.size(), static_cast<size_t>(1));
+    EXPECT_TRUE(orders[0].status == Model::OrderStatus::RESERVED);
+}
+
+// ReleaseMenuView: 번호 선택 재시도 도중 표준 입력이 고갈되면 무한루프 없이 취소되고,
+// 출고 대상 주문(CONFIRMED)의 상태가 그대로 유지된다.
+TEST_F(ConsoleViewTest, ReleaseMenuView_ExhaustedInput_CancelsWithoutInfiniteLoop) {
+    fake.SaveSamples({ MakeSample("S-001", "실리콘 웨이퍼-8인치", 5.0, 1.0, 480) });
+
+    Model::Order confirmed;
+    confirmed.orderNo = "ORD-20260415-0001";
+    confirmed.sampleId = "S-001";
+    confirmed.customerName = "SK하이닉스";
+    confirmed.quantity = 100;
+    confirmed.status = Model::OrderStatus::CONFIRMED;
+    fake.SaveOrders({ confirmed });
+
+    Monitor::OrderService orderService(mock);
+    Console::ReleaseMenuView view(mock, orderService);
+
+    SetInput(""); // 즉시 EOF (번호 선택 프롬프트에서 바로 고갈)
+
+    testing::internal::CaptureStdout();
+    view.Run();
+    testing::internal::GetCapturedStdout();
+
+    const std::vector<Model::Order> orders = fake.LoadOrders();
+    ASSERT_EQ(orders.size(), static_cast<size_t>(1));
+    EXPECT_TRUE(orders[0].status == Model::OrderStatus::CONFIRMED);
 }

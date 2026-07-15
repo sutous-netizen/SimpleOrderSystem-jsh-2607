@@ -25,12 +25,16 @@ void ApprovalMenuView::Run() {
         return;
     }
 
+    // 고객명/시료명 컬럼은 한글이 섞이므로 std::setw(바이트 기준) 대신 PadDisplayWidth(화면 폭 기준)를 사용한다.
+    constexpr int kCustomerColumnWidth = 16;
+    constexpr int kSampleColumnWidth = 22;
+
     std::cout << "승인 대기 중인 예약 목록 (RESERVED)\n";
     std::cout << std::left
                << std::setw(6) << "번호"
                << std::setw(12) << "주문번호"
-               << std::setw(16) << "고객"
-               << std::setw(22) << "시료"
+               << PadDisplayWidth("고객", kCustomerColumnWidth)
+               << PadDisplayWidth("시료", kSampleColumnWidth)
                << std::setw(10) << "수량"
                << "상태" << "\n";
 
@@ -39,8 +43,8 @@ void ApprovalMenuView::Run() {
         std::cout << std::left
                    << std::setw(6) << ("[" + std::to_string(i + 1) + "]")
                    << std::setw(12) << order.orderNo
-                   << std::setw(16) << order.customerName
-                   << std::setw(22) << SampleNameOf(store_, order.sampleId)
+                   << PadDisplayWidth(order.customerName, kCustomerColumnWidth)
+                   << PadDisplayWidth(SampleNameOf(store_, order.sampleId), kSampleColumnWidth)
                    << std::setw(10) << (std::to_string(order.quantity) + " ea")
                    << Model::ToString(order.status) << "\n";
     }
@@ -50,6 +54,10 @@ void ApprovalMenuView::Run() {
         const std::string text = ReadLine("\n승인/거절할 번호 > ");
         if (TryParseInt64(text, selected) && selected >= 1 && static_cast<size_t>(selected) <= pending.size()) {
             break;
+        }
+        if (IsInputExhausted()) {
+            std::cout << "입력이 종료되었습니다. 처리를 취소합니다.\n";
+            return;
         }
         std::cout << "1 ~ " << pending.size() << " 범위의 번호를 입력하세요.\n";
     }

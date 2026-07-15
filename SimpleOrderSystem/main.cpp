@@ -35,6 +35,16 @@ void ConfigureConsoleForUtf8() {
 #endif
 }
 
+#ifdef _DEBUG
+
+// Debug 빌드: TC만 수행하고 그 결과 코드를 그대로 반환한다(콘솔 앱은 실행하지 않는다).
+int RunTests(int argc, char** argv) {
+    ::testing::InitGoogleMock(&argc, argv);
+    return RUN_ALL_TESTS();
+}
+
+#else
+
 // 실행 파일 위치와 무관하게 항상 프로젝트 data/ 폴더를 사용하도록 보장한다.
 void EnsureDataDirectoryExists() {
     std::filesystem::create_directories("data");
@@ -50,17 +60,8 @@ bool HasSeedOption(int argc, char** argv) {
     return false;
 }
 
-} // namespace
-
-int main(int argc, char** argv) {
-    ConfigureConsoleForUtf8();
-
-#ifdef _DEBUG
-    // Debug 빌드는 TC만 수행하고 그 결과 코드로 즉시 종료한다(콘솔 앱 미실행).
-    ::testing::InitGoogleMock(&argc, argv);
-    return RUN_ALL_TESTS();
-#endif
-
+// Release 빌드: 콘솔 애플리케이션을 실행한다.
+int RunConsoleApp(int argc, char** argv) {
     EnsureDataDirectoryExists();
 
     Persistence::JsonDataStore store("data/samples.json", "data/orders.json");
@@ -76,4 +77,18 @@ int main(int argc, char** argv) {
     app.Run();
 
     return 0;
+}
+
+#endif
+
+} // namespace
+
+int main(int argc, char** argv) {
+    ConfigureConsoleForUtf8();
+
+#ifdef _DEBUG
+    return RunTests(argc, argv);
+#else
+    return RunConsoleApp(argc, argv);
+#endif
 }

@@ -49,10 +49,13 @@ void ProductionLineView::Run() {
         std::cout << "대기 중인 주문 (FIFO 순)\n";
     }
 
+    // 시료명 컬럼은 한글이 섞이므로 std::setw(바이트 기준) 대신 PadDisplayWidth(화면 폭 기준)를 사용한다.
+    constexpr int kSampleColumnWidth = 22;
+
     std::cout << std::left
                << std::setw(6) << "순서"
                << std::setw(12) << "주문번호"
-               << std::setw(22) << "시료"
+               << PadDisplayWidth("시료", kSampleColumnWidth)
                << std::setw(10) << "주문량"
                << std::setw(10) << "부족분"
                << std::setw(10) << "실생산량"
@@ -65,7 +68,7 @@ void ProductionLineView::Run() {
         std::cout << std::left
                    << std::setw(6) << (std::to_string(i + 1))
                    << std::setw(12) << item.order.orderNo
-                   << std::setw(22) << item.sample.name
+                   << PadDisplayWidth(item.sample.name, kSampleColumnWidth)
                    << std::setw(10) << (std::to_string(item.order.quantity) + " ea")
                    << std::setw(10) << (std::to_string(item.order.shortage) + " ea")
                    << std::setw(10) << (std::to_string(item.order.actualProductionQty) + " ea")
