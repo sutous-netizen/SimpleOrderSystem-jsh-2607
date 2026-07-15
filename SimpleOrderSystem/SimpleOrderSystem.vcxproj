@@ -164,6 +164,8 @@
     <ClCompile Include="Tests\PersistenceTests.cpp" />
     <ClCompile Include="Tests\MonitorTests.cpp" />
     <ClCompile Include="Tests\DummyTests.cpp" />
+    <ClCompile Include="Tests\ConsoleUtilTests.cpp" />
+    <ClCompile Include="Tests\ConsoleViewTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Model\Types.h" />

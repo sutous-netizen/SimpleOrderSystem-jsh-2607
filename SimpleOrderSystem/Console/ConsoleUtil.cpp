@@ -84,19 +84,35 @@ bool TryParseDouble(const std::string& text, double& out) {
     }
 }
 
+namespace {
+// ReadLine 이 표준 입력 고갈(EOF)로 실패했는지 추적하는 상태.
+// 콘솔 앱은 단일 입력 스레드로 동작하므로 전역 플래그로 충분하다.
+bool g_inputExhausted = false;
+} // namespace
+
 std::string ReadLine(const std::string& prompt) {
     std::cout << prompt;
     std::string line;
     if (!std::getline(std::cin, line)) {
         std::cin.clear();
+        g_inputExhausted = true;
         return "";
     }
+    g_inputExhausted = false;
     return Trim(line);
+}
+
+bool IsInputExhausted() {
+    return g_inputExhausted;
 }
 
 bool ReadYesNo(const std::string& prompt) {
     while (true) {
         const std::string input = ReadLine(prompt);
+        if (IsInputExhausted()) {
+            // 입력 스트림이 고갈된 상태에서 무한 재시도하지 않도록 취소로 간주한다.
+            return false;
+        }
         if (input.empty()) {
             continue;
         }

@@ -66,6 +66,10 @@ void SampleMenuView::ShowRegister() {
         if (TryParseDouble(text, avgTime) && avgTime > 0.0) {
             break;
         }
+        if (IsInputExhausted()) {
+            std::cout << "입력이 종료되었습니다. 등록을 취소합니다.\n";
+            return;
+        }
         std::cout << "0보다 큰 숫자를 입력하세요.\n";
     }
     sample.avgProductionTimeMin = avgTime;
@@ -75,6 +79,10 @@ void SampleMenuView::ShowRegister() {
         const std::string text = ReadLine("수율(0~1)   > ");
         if (TryParseDouble(text, yield) && yield > 0.0 && yield <= 1.0) {
             break;
+        }
+        if (IsInputExhausted()) {
+            std::cout << "입력이 종료되었습니다. 등록을 취소합니다.\n";
+            return;
         }
         std::cout << "0 초과 1 이하의 숫자를 입력하세요.\n";
     }

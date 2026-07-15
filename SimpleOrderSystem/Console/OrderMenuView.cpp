@@ -35,6 +35,10 @@ void OrderMenuView::Run() {
         if (TryParseInt64(text, quantity) && quantity > 0) {
             break;
         }
+        if (IsInputExhausted()) {
+            std::cout << "입력이 종료되었습니다. 주문을 취소합니다.\n";
+            return;
+        }
         std::cout << "0보다 큰 정수를 입력하세요.\n";
     }
 

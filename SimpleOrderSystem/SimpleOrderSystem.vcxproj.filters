@@ -105,6 +105,12 @@
     <ClCompile Include="Tests\DummyTests.cpp">
       <Filter>소스 파일\Tests</Filter>
     </ClCompile>
+    <ClCompile Include="Tests\ConsoleUtilTests.cpp">
+      <Filter>소스 파일\Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="Tests\ConsoleViewTests.cpp">
+      <Filter>소스 파일\Tests</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Model\Types.h">
