@@ -90,6 +90,9 @@
     <ClCompile Include="Dummy\DummyDataGenerator.cpp">
       <Filter>소스 파일\Dummy</Filter>
     </ClCompile>
+    <ClCompile Include="Tests\ModelTests.cpp">
+      <Filter>소스 파일\Tests</Filter>
+    </ClCompile>
     <ClCompile Include="Tests\PersistenceTests.cpp">
       <Filter>소스 파일\Tests</Filter>
     </ClCompile>

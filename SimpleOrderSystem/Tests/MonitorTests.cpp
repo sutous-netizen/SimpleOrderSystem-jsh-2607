@@ -285,6 +285,100 @@ TEST(생산큐_FIFO_순서_반환) {
     ASSERT_TRUE(queue[1].order.orderNo == second.orderNo);
 }
 
+TEST(생산큐_진행중_진행률및완료예정시각_계산) {
+    InMemoryDataStore store;
+    store.samples_.push_back(MakeSample("S-006", "테스트시료-진행중", 1.0, 1.0, 0));
+
+    Model::Order order;
+    order.orderNo = "ORD-TEST-0003";
+    order.sampleId = "S-006";
+    order.customerName = "테스트고객3";
+    order.quantity = 100;
+    order.status = Model::OrderStatus::PRODUCING;
+    order.shortage = 100;
+    order.actualProductionQty = 100;
+    order.totalProductionTimeMin = 100.0; // 100분 소요
+    order.createdAt = PastString(50.0);
+    order.updatedAt = PastString(50.0); // 50분 전 큐잉 -> 절반 진행
+    store.orders_.push_back(order);
+
+    Monitor::OrderService service(store);
+    auto queue = service.GetProductionQueue();
+    ASSERT_EQ(static_cast<int>(queue.size()), 1);
+
+    ASSERT_TRUE(queue[0].progressPercent > 0.0);
+    ASSERT_TRUE(queue[0].progressPercent < 100.0);
+    ASSERT_TRUE(std::abs(queue[0].progressPercent - 50.0) < 5.0); // 약 50% 진행
+    ASSERT_TRUE(std::abs(queue[0].elapsedMinutes - 50.0) < 1.0);
+}
+
+TEST(생산큐_완료시각경과시_진행률100퍼센트) {
+    InMemoryDataStore store;
+    store.samples_.push_back(MakeSample("S-007", "테스트시료-완료", 1.0, 1.0, 0));
+
+    Model::Order order;
+    order.orderNo = "ORD-TEST-0004";
+    order.sampleId = "S-007";
+    order.customerName = "테스트고객4";
+    order.quantity = 50;
+    order.status = Model::OrderStatus::PRODUCING;
+    order.shortage = 50;
+    order.actualProductionQty = 50;
+    order.totalProductionTimeMin = 50.0;
+    order.createdAt = PastString(120.0);
+    order.updatedAt = PastString(120.0); // 120분 전 큐잉 -> 총생산시간(50분) 이미 경과
+    store.orders_.push_back(order);
+
+    Monitor::OrderService service(store);
+    // CatchUpProduction을 호출하지 않은 상태(=아직 PRODUCING)에서 GetProductionQueue만 호출했을 때의 값을 검증.
+    auto queue = service.GetProductionQueue();
+    ASSERT_EQ(static_cast<int>(queue.size()), 1);
+
+    ASSERT_TRUE(std::abs(queue[0].progressPercent - 100.0) < 0.0001);
+    ASSERT_TRUE(std::abs(queue[0].elapsedMinutes - 50.0) < 0.0001);
+}
+
+TEST(생산큐_FIFO_두번째주문은_첫주문완료전까지_진행률0) {
+    InMemoryDataStore store;
+    store.samples_.push_back(MakeSample("S-008", "테스트시료-FIFO", 1.0, 1.0, 0));
+
+    Model::Order first;
+    first.orderNo = "ORD-TEST-0005";
+    first.sampleId = "S-008";
+    first.customerName = "고객A";
+    first.quantity = 100;
+    first.status = Model::OrderStatus::PRODUCING;
+    first.shortage = 100;
+    first.actualProductionQty = 100;
+    first.totalProductionTimeMin = 100.0; // 100분 소요, 아직 진행중
+    first.createdAt = PastString(10.0);
+    first.updatedAt = PastString(10.0); // 10분 전 큐잉
+    store.orders_.push_back(first);
+
+    Model::Order second;
+    second.orderNo = "ORD-TEST-0006";
+    second.sampleId = "S-008";
+    second.customerName = "고객B";
+    second.quantity = 50;
+    second.status = Model::OrderStatus::PRODUCING;
+    second.shortage = 50;
+    second.actualProductionQty = 50;
+    second.totalProductionTimeMin = 50.0;
+    second.createdAt = PastString(5.0);
+    second.updatedAt = PastString(5.0); // 첫 주문보다 늦게 큐잉
+    store.orders_.push_back(second);
+
+    Monitor::OrderService service(store);
+    auto queue = service.GetProductionQueue();
+    ASSERT_EQ(static_cast<int>(queue.size()), 2);
+    ASSERT_TRUE(queue[0].order.orderNo == first.orderNo);
+    ASSERT_TRUE(queue[1].order.orderNo == second.orderNo);
+
+    ASSERT_TRUE(queue[0].progressPercent > 0.0); // 첫 주문(라인 선점)은 진행중
+    ASSERT_TRUE(std::abs(queue[1].progressPercent - 0.0) < 0.0001); // 두번째 주문은 첫 주문이 끝날 때까지 대기(0%)
+    ASSERT_TRUE(std::abs(queue[1].elapsedMinutes - 0.0) < 0.0001);
+}
+
 TEST(출고처리_CONFIRMED에서_RELEASE로_전환) {
     InMemoryDataStore store;
     store.samples_.push_back(MakeSample("S-001", "실리콘 웨이퍼-8인치", 5.0, 1.0, 500));

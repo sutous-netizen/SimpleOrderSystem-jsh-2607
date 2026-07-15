@@ -7,6 +7,7 @@
 #include "Persistence/JsonDataStore.h"
 #include "Monitor/OrderService.h"
 #include "Console/AppController.h"
+#include "Dummy/DummyDataGenerator.h"
 
 #ifdef _DEBUG
 #include "Tests/TestFramework.h"
@@ -22,9 +23,19 @@ void EnsureDataDirectoryExists() {
     std::filesystem::create_directories("data");
 }
 
+// "--seed" 인자가 주어지면 기본 더미 데이터셋으로 데이터를 채운다(개발/데모용).
+bool HasSeedOption(int argc, char** argv) {
+    for (int i = 1; i < argc; ++i) {
+        if (std::string(argv[i]) == "--seed") {
+            return true;
+        }
+    }
+    return false;
+}
+
 } // namespace
 
-int main() {
+int main(int argc, char** argv) {
 #ifdef _DEBUG
     const int failedTests = TestFramework::RunAllTests();
     if (failedTests > 0) {
@@ -36,6 +47,13 @@ int main() {
     EnsureDataDirectoryExists();
 
     Persistence::JsonDataStore store("data/samples.json", "data/orders.json");
+
+    if (HasSeedOption(argc, argv)) {
+        Dummy::DummyDataGenerator seeder(store);
+        seeder.SeedDefaultDataset(/*reset=*/true);
+        std::cout << "[--seed] 기본 더미 데이터셋을 생성했습니다.\n";
+    }
+
     Monitor::OrderService orderService(store);
     Console::AppController app(store, orderService);
     app.Run();

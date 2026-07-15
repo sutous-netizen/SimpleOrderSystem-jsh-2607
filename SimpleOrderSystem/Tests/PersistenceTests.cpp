@@ -178,3 +178,72 @@ TEST(JsonDataStore_NextOrderNo_같은_날짜_다음_번호_반환) {
     std::string freshDateNo = store.NextOrderNo("20260101");
     ASSERT_EQ(freshDateNo, std::string("ORD-20260101-0001"));
 }
+
+// "애플리케이션 재실행 후에도 데이터가 유지된다"(docs/01-개요.md) 요구사항을
+// 실제 파일 기반으로 검증하는 통합 테스트.
+// - 인스턴스 A로 저장 -> A를 스코프 종료로 소멸 -> 같은 경로로 인스턴스 B 생성(재실행 시뮬레이션)
+//   -> B가 A의 데이터를 그대로 읽어오는지 확인한다.
+TEST(JsonDataStore_재실행_시뮬레이션_저장한_시료와_주문이_그대로_유지) {
+    TempPaths paths;
+
+    Model::Sample savedSample;
+    Model::Order savedOrder;
+
+    {
+        Persistence::JsonDataStore storeA(paths.samplesPath, paths.ordersPath);
+
+        savedSample.id = "S-010";
+        savedSample.name = "재실행테스트시료";
+        savedSample.avgProductionTimeMin = 8.0;
+        savedSample.yieldRate = 0.9;
+        savedSample.stock = 35;
+        storeA.SaveSamples(std::vector<Model::Sample>{ savedSample });
+
+        savedOrder.orderNo = "ORD-20260715-0099";
+        savedOrder.sampleId = savedSample.id;
+        savedOrder.customerName = "재실행고객";
+        savedOrder.quantity = 60;
+        savedOrder.status = Model::OrderStatus::PRODUCING;
+        savedOrder.createdAt = "2026-07-15 08:00:00";
+        savedOrder.updatedAt = "2026-07-15 08:10:00";
+        savedOrder.shortage = 25;
+        savedOrder.actualProductionQty = 28;
+        savedOrder.totalProductionTimeMin = 224.0;
+        storeA.SaveOrders(std::vector<Model::Order>{ savedOrder });
+
+        // storeA 는 이 블록을 벗어나며 소멸된다(애플리케이션 종료를 흉내낸다).
+    }
+
+    // 같은 파일 경로로 새 인스턴스 B 를 생성한다(애플리케이션 재실행을 흉내낸다).
+    Persistence::JsonDataStore storeB(paths.samplesPath, paths.ordersPath);
+
+    std::vector<Model::Sample> loadedSamples = storeB.LoadSamples();
+    ASSERT_EQ(loadedSamples.size(), static_cast<size_t>(1));
+    ASSERT_EQ(loadedSamples[0].id, savedSample.id);
+    ASSERT_EQ(loadedSamples[0].name, savedSample.name);
+    ASSERT_TRUE(std::abs(loadedSamples[0].avgProductionTimeMin - savedSample.avgProductionTimeMin) < 1e-9);
+    ASSERT_TRUE(std::abs(loadedSamples[0].yieldRate - savedSample.yieldRate) < 1e-9);
+    ASSERT_EQ(loadedSamples[0].stock, savedSample.stock);
+
+    std::vector<Model::Order> loadedOrders = storeB.LoadOrders();
+    ASSERT_EQ(loadedOrders.size(), static_cast<size_t>(1));
+    ASSERT_EQ(loadedOrders[0].orderNo, savedOrder.orderNo);
+    ASSERT_EQ(loadedOrders[0].sampleId, savedOrder.sampleId);
+    ASSERT_EQ(loadedOrders[0].customerName, savedOrder.customerName);
+    ASSERT_EQ(loadedOrders[0].quantity, savedOrder.quantity);
+    ASSERT_TRUE(loadedOrders[0].status == savedOrder.status);
+    ASSERT_EQ(loadedOrders[0].createdAt, savedOrder.createdAt);
+    ASSERT_EQ(loadedOrders[0].updatedAt, savedOrder.updatedAt);
+    ASSERT_EQ(loadedOrders[0].shortage, savedOrder.shortage);
+    ASSERT_EQ(loadedOrders[0].actualProductionQty, savedOrder.actualProductionQty);
+    ASSERT_TRUE(std::abs(loadedOrders[0].totalProductionTimeMin - savedOrder.totalProductionTimeMin) < 1e-9);
+
+    // FindXxx 인터페이스도 재실행 후 정상 동작해야 한다.
+    auto foundSample = storeB.FindSampleById(savedSample.id);
+    ASSERT_TRUE(foundSample.has_value());
+    ASSERT_EQ(foundSample->stock, savedSample.stock);
+
+    auto foundOrder = storeB.FindOrderByNo(savedOrder.orderNo);
+    ASSERT_TRUE(foundOrder.has_value());
+    ASSERT_TRUE(foundOrder->status == savedOrder.status);
+}

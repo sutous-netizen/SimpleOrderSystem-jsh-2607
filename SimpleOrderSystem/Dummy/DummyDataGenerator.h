@@ -25,6 +25,11 @@ public:
     // 시료가 하나도 등록되어 있지 않으면 아무 것도 생성하지 않는다.
     void GenerateOrders(int countPerStatus, bool reset);
 
+    // 합리적인 기본값(시료 12개, 주문 상태별 3건씩)으로 데이터를 한 번에 채운다.
+    // reset=true면 기존 데이터를 비우고 새로 채우고, false면 기존 데이터에 추가한다.
+    // (시료는 reset 여부를 그대로 따르고, 주문은 방금 생성/유지된 시료 위에 항상 추가로 쌓는다.)
+    void SeedDefaultDataset(bool reset);
+
 private:
     Persistence::IDataStore& store_;
 };

@@ -272,7 +272,7 @@ std::vector<InventoryStatus> OrderService::GetInventoryStatus() const {
     return result;
 }
 
-std::vector<ProductionQueueItem> OrderService::GetProductionQueue() const {
+std::vector<OrderService::ScheduledProduction> OrderService::BuildProductionSchedule() const {
     auto orders = store_.LoadOrders();
 
     std::vector<Model::Order> producing;
@@ -287,40 +287,13 @@ std::vector<ProductionQueueItem> OrderService::GetProductionQueue() const {
         return a.updatedAt < b.updatedAt;
     });
 
-    std::vector<ProductionQueueItem> result;
-    result.reserve(producing.size());
-    for (auto& o : producing) {
-        auto sampleOpt = store_.FindSampleById(o.sampleId);
-        Model::Sample sample = sampleOpt.has_value() ? sampleOpt.value() : Model::Sample{};
-        result.push_back(ProductionQueueItem{ o, sample });
-    }
-    return result;
-}
+    std::vector<ScheduledProduction> schedule;
+    schedule.reserve(producing.size());
 
-void OrderService::CatchUpProduction() {
-    auto orders = store_.LoadOrders();
-    auto samples = store_.LoadSamples();
-
-    // 인덱스 기반 FIFO 순서(큐잉 시각 오름차순)
-    std::vector<size_t> queueIdx;
-    for (size_t i = 0; i < orders.size(); ++i) {
-        if (orders[i].status == Model::OrderStatus::PRODUCING) {
-            queueIdx.push_back(i);
-        }
-    }
-    std::sort(queueIdx.begin(), queueIdx.end(), [&](size_t a, size_t b) {
-        return orders[a].updatedAt < orders[b].updatedAt;
-    });
-
-    const std::time_t now = std::time(nullptr);
     std::time_t lineFreeTime = 0;
     bool lineInitialized = false;
 
-    bool ordersChanged = false;
-    bool samplesChanged = false;
-
-    for (size_t idx : queueIdx) {
-        Model::Order& order = orders[idx];
+    for (auto& order : producing) {
         std::time_t queuedAt = ParseTime(order.updatedAt);
         std::time_t startTime = lineInitialized ? std::max(lineFreeTime, queuedAt) : queuedAt;
         std::time_t finishTime = AddMinutes(startTime, order.totalProductionTimeMin);
@@ -328,20 +301,86 @@ void OrderService::CatchUpProduction() {
         lineFreeTime = finishTime;
         lineInitialized = true;
 
-        if (finishTime > now) {
+        schedule.push_back(ScheduledProduction{ order, startTime, finishTime });
+    }
+
+    return schedule;
+}
+
+std::vector<ProductionQueueItem> OrderService::GetProductionQueue() const {
+    auto schedule = BuildProductionSchedule();
+    const std::time_t now = std::time(nullptr);
+
+    std::vector<ProductionQueueItem> result;
+    result.reserve(schedule.size());
+
+    for (auto& entry : schedule) {
+        auto sampleOpt = store_.FindSampleById(entry.order.sampleId);
+        Model::Sample sample = sampleOpt.has_value() ? sampleOpt.value() : Model::Sample{};
+
+        const double totalProductionTimeMin = entry.order.totalProductionTimeMin;
+        double elapsedMinutes;
+        double progressPercent;
+        if (totalProductionTimeMin <= 0.0) {
+            // 0으로 나누기 방지: 생산 시간이 없는(=즉시 완료 취급) 경우 완료 처리.
+            elapsedMinutes = 0.0;
+            progressPercent = 100.0;
+        } else {
+            double rawElapsedMinutes = std::difftime(now, entry.startTime) / 60.0;
+            elapsedMinutes = std::clamp(rawElapsedMinutes, 0.0, totalProductionTimeMin);
+            progressPercent = elapsedMinutes / totalProductionTimeMin * 100.0;
+        }
+
+        ProductionQueueItem item;
+        item.order = entry.order;
+        item.sample = sample;
+        item.elapsedMinutes = elapsedMinutes;
+        item.progressPercent = progressPercent;
+        item.estimatedCompletionAt = FormatTime(entry.finishTime);
+        result.push_back(std::move(item));
+    }
+
+    return result;
+}
+
+void OrderService::CatchUpProduction() {
+    auto schedule = BuildProductionSchedule();
+    if (schedule.empty()) {
+        return;
+    }
+
+    auto orders = store_.LoadOrders();
+    auto samples = store_.LoadSamples();
+
+    const std::time_t now = std::time(nullptr);
+
+    bool ordersChanged = false;
+    bool samplesChanged = false;
+
+    for (auto& entry : schedule) {
+        if (entry.finishTime > now) {
             // 단일 FIFO 라인: 이 주문이 아직 안 끝났으면 뒤 순서 주문들도 아직 끝나지 않았다고 판단하고 중단.
             break;
         }
 
+        auto oIt = std::find_if(orders.begin(), orders.end(), [&](const Model::Order& o) {
+            return o.orderNo == entry.order.orderNo;
+        });
+        if (oIt == orders.end()) {
+            continue;
+        }
+
         // 생산 완료 처리: PRODUCING -> CONFIRMED, 재고에 실 생산량(수율 반영 총 생산량) 반영
-        auto sIt = std::find_if(samples.begin(), samples.end(), [&](const Model::Sample& s) { return s.id == order.sampleId; });
+        auto sIt = std::find_if(samples.begin(), samples.end(), [&](const Model::Sample& s) {
+            return s.id == oIt->sampleId;
+        });
         if (sIt != samples.end()) {
-            sIt->stock += order.actualProductionQty;
+            sIt->stock += oIt->actualProductionQty;
             samplesChanged = true;
         }
 
-        order.status = Model::OrderStatus::CONFIRMED;
-        order.updatedAt = FormatTime(finishTime);
+        oIt->status = Model::OrderStatus::CONFIRMED;
+        oIt->updatedAt = FormatTime(entry.finishTime);
         ordersChanged = true;
     }
 

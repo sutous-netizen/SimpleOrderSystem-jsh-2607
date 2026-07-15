@@ -242,4 +242,13 @@ void DummyDataGenerator::GenerateOrders(int countPerStatus, bool reset) {
     }
 }
 
+void DummyDataGenerator::SeedDefaultDataset(bool reset) {
+    static constexpr int kDefaultSampleCount = 12;
+    static constexpr int kDefaultOrdersPerStatus = 3;
+
+    GenerateSamples(kDefaultSampleCount, reset);
+    // 시료를 방금 만들었으므로, 주문은 항상 그 위에 이어서 쌓는다(append).
+    GenerateOrders(kDefaultOrdersPerStatus, false);
+}
+
 } // namespace Dummy

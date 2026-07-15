@@ -210,6 +210,28 @@ TEST(DummyGenerator_GenerateOrders_reset_false_이면_기존주문에_누적) {
     ASSERT_EQ(store.LoadOrders().size(), static_cast<size_t>(2 * 5 + 1 * 5));
 }
 
+TEST(DummyGenerator_SeedDefaultDataset_기본값으로_시료12건_주문5상태x3건_생성) {
+    FakeDataStore store;
+    Dummy::DummyDataGenerator generator(store);
+
+    generator.SeedDefaultDataset(true);
+
+    std::vector<Model::Sample> samples = store.LoadSamples();
+    ASSERT_EQ(samples.size(), static_cast<size_t>(12));
+
+    std::vector<Model::Order> orders = store.LoadOrders();
+    ASSERT_EQ(orders.size(), static_cast<size_t>(5 * 3));
+
+    std::map<Model::OrderStatus, int> counts;
+    for (const auto& o : orders) counts[o.status]++;
+
+    ASSERT_EQ(counts[Model::OrderStatus::RESERVED], 3);
+    ASSERT_EQ(counts[Model::OrderStatus::REJECTED], 3);
+    ASSERT_EQ(counts[Model::OrderStatus::PRODUCING], 3);
+    ASSERT_EQ(counts[Model::OrderStatus::CONFIRMED], 3);
+    ASSERT_EQ(counts[Model::OrderStatus::RELEASE], 3);
+}
+
 TEST(DummyGenerator_GenerateOrders_주문번호는_고유하다) {
     FakeDataStore store;
     Dummy::DummyDataGenerator generator(store);

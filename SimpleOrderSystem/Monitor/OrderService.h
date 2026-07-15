@@ -6,6 +6,7 @@
 #include <vector>
 #include <string>
 #include <cstdint>
+#include <ctime>
 #include "../Model/Types.h"
 #include "../Persistence/IDataStore.h"
 
@@ -24,6 +25,9 @@ struct OrderStatusCount {
 struct ProductionQueueItem {
     Model::Order order;
     Model::Sample sample;
+    double elapsedMinutes = 0.0;        // 이 주문의 생산 경과 시간(분). 아직 라인에 진입 전이면 0.
+    double progressPercent = 0.0;       // 0~100 사이로 clamp된 진행률(%).
+    std::string estimatedCompletionAt;  // "YYYY-MM-DD HH:MM:SS" 형식의 예상 완료 시각.
 };
 
 class OrderService {
@@ -44,6 +48,18 @@ public:
     void CatchUpProduction(); // 프로그램 시작 시 1회 호출: 실제 경과 시간을 반영해 완료된 생산을 CONFIRMED로 전환하고 재고 반영
 
 private:
+    // 단일 생산 라인 + FIFO 누적 스케줄링 결과 한 건.
+    // CatchUpProduction()과 GetProductionQueue()가 동일한 스케줄링 로직을 공유하기 위한 내부 표현.
+    struct ScheduledProduction {
+        Model::Order order;
+        std::time_t startTime;   // 실제 생산 시작(라인 투입) 시각
+        std::time_t finishTime;  // 생산 완료(예정/실제) 시각
+    };
+
+    // PRODUCING 주문들을 큐잉 시각(updatedAt) 오름차순으로 정렬한 뒤,
+    // 단일 라인 누적 스케줄(cumulativeStart = max(이전 완료, 큐잉 시각), completion = start + 총생산시간)을 계산한다.
+    std::vector<ScheduledProduction> BuildProductionSchedule() const;
+
     Persistence::IDataStore& store_;
 };
 
