@@ -157,18 +157,39 @@
     <ClCompile Include="Console\ReleaseMenuView.cpp" />
     <ClCompile Include="Dummy\DummyDataGenerator.cpp" />
   </ItemGroup>
-  <!-- 테스트 코드(gtest/gmock)는 Debug 구성에서만 빌드에 포함된다.
-       Release 바이너리에는 테스트 프레임워크/코드가 전혀 섞이지 않는다. -->
-  <ItemGroup Condition="'$(Configuration)'=='Debug'">
-    <ClCompile Include="Tests\ModelTests.cpp" />
-    <ClCompile Include="Tests\PersistenceTests.cpp" />
-    <ClCompile Include="Tests\MonitorTests.cpp" />
-    <ClCompile Include="Tests\DummyTests.cpp" />
-    <ClCompile Include="Tests\ConsoleUtilTests.cpp" />
-    <ClCompile Include="Tests\ConsoleViewTests.cpp" />
-    <ClCompile Include="Tests\Integrate\Debug\OrderLifecycleIntegrationTests.cpp" />
-    <ClCompile Include="Tests\Integrate\Debug\RestartAndDummySeedIntegrationTests.cpp" />
-    <ClCompile Include="Tests\Integrate\Debug\SeedDataConsistencyIntegrationTests.cpp" />
+  <!-- 테스트 코드(gtest/gmock)는 Debug 구성에서만 빌드에 포함된다(Release 바이너리에서 제외).
+       ItemGroup 자체는 Configuration으로 조건화하지 않는다 — Visual Studio Solution Explorer(및
+       .slnx 기반 조회)는 조건화된 ItemGroup 안의 항목을 활성 구성에 따라 아예 표시하지 않을 수
+       있으므로, 파일은 항상 프로젝트에 나타나게 하고 실제 컴파일 여부만 ExcludedFromBuild로
+       구성별로 제어한다. -->
+  <ItemGroup>
+    <ClCompile Include="Tests\ModelTests.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)'!='Debug'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="Tests\PersistenceTests.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)'!='Debug'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="Tests\MonitorTests.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)'!='Debug'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="Tests\DummyTests.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)'!='Debug'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="Tests\ConsoleUtilTests.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)'!='Debug'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="Tests\ConsoleViewTests.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)'!='Debug'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="Tests\Integrate\Debug\OrderLifecycleIntegrationTests.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)'!='Debug'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="Tests\Integrate\Debug\RestartAndDummySeedIntegrationTests.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)'!='Debug'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="Tests\Integrate\Debug\SeedDataConsistencyIntegrationTests.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)'!='Debug'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Model\Types.h" />
@@ -185,11 +206,22 @@
     <ClInclude Include="Console\ReleaseMenuView.h" />
     <ClInclude Include="Dummy\DummyDataGenerator.h" />
   </ItemGroup>
-  <ItemGroup Condition="'$(Configuration)'=='Debug'">
+  <ItemGroup>
     <ClInclude Include="Tests\Mocks\MockDataStore.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="Tests\Integrate\Release\run-scenarios.ps1" />
+    <None Include="Tests\Integrate\Release\scenarios\01-register-and-list-sample.txt" />
+    <None Include="Tests\Integrate\Release\scenarios\01-register-and-list-sample.expect.txt" />
+    <None Include="Tests\Integrate\Release\scenarios\02-place-order-insufficient-stock-immediate.txt" />
+    <None Include="Tests\Integrate\Release\scenarios\02-place-order-insufficient-stock-immediate.expect.txt" />
+    <None Include="Tests\Integrate\Release\scenarios\03-place-order-and-reject.txt" />
+    <None Include="Tests\Integrate\Release\scenarios\03-place-order-and-reject.expect.txt" />
+    <None Include="Tests\Integrate\Release\scenarios\04-monitoring-after-order.txt" />
+    <None Include="Tests\Integrate\Release\scenarios\04-monitoring-after-order.expect.txt" />
+    <None Include="Tests\Integrate\Release\scenarios\05-seed-and-monitor.txt" />
+    <None Include="Tests\Integrate\Release\scenarios\05-seed-and-monitor.expect.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

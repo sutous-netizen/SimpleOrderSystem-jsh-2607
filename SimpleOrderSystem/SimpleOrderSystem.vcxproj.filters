@@ -55,6 +55,9 @@
     <Filter Include="소스 파일\Tests\Integrate">
       <UniqueIdentifier>{c1a10001-0000-4000-8000-000000000007}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\Tests\Integrate\Release">
+      <UniqueIdentifier>{c1a10001-0000-4000-8000-000000000008}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -170,5 +173,38 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="Tests\Integrate\Release\run-scenarios.ps1">
+      <Filter>소스 파일\Tests\Integrate\Release</Filter>
+    </None>
+    <None Include="Tests\Integrate\Release\scenarios\01-register-and-list-sample.txt">
+      <Filter>소스 파일\Tests\Integrate\Release</Filter>
+    </None>
+    <None Include="Tests\Integrate\Release\scenarios\01-register-and-list-sample.expect.txt">
+      <Filter>소스 파일\Tests\Integrate\Release</Filter>
+    </None>
+    <None Include="Tests\Integrate\Release\scenarios\02-place-order-insufficient-stock-immediate.txt">
+      <Filter>소스 파일\Tests\Integrate\Release</Filter>
+    </None>
+    <None Include="Tests\Integrate\Release\scenarios\02-place-order-insufficient-stock-immediate.expect.txt">
+      <Filter>소스 파일\Tests\Integrate\Release</Filter>
+    </None>
+    <None Include="Tests\Integrate\Release\scenarios\03-place-order-and-reject.txt">
+      <Filter>소스 파일\Tests\Integrate\Release</Filter>
+    </None>
+    <None Include="Tests\Integrate\Release\scenarios\03-place-order-and-reject.expect.txt">
+      <Filter>소스 파일\Tests\Integrate\Release</Filter>
+    </None>
+    <None Include="Tests\Integrate\Release\scenarios\04-monitoring-after-order.txt">
+      <Filter>소스 파일\Tests\Integrate\Release</Filter>
+    </None>
+    <None Include="Tests\Integrate\Release\scenarios\04-monitoring-after-order.expect.txt">
+      <Filter>소스 파일\Tests\Integrate\Release</Filter>
+    </None>
+    <None Include="Tests\Integrate\Release\scenarios\05-seed-and-monitor.txt">
+      <Filter>소스 파일\Tests\Integrate\Release</Filter>
+    </None>
+    <None Include="Tests\Integrate\Release\scenarios\05-seed-and-monitor.expect.txt">
+      <Filter>소스 파일\Tests\Integrate\Release</Filter>
+    </None>
   </ItemGroup>
 </Project>
