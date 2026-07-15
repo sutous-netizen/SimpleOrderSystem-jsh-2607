@@ -156,6 +156,10 @@
     <ClCompile Include="Console\ProductionLineView.cpp" />
     <ClCompile Include="Console\ReleaseMenuView.cpp" />
     <ClCompile Include="Dummy\DummyDataGenerator.cpp" />
+  </ItemGroup>
+  <!-- 테스트 코드(gtest/gmock)는 Debug 구성에서만 빌드에 포함된다.
+       Release 바이너리에는 테스트 프레임워크/코드가 전혀 섞이지 않는다. -->
+  <ItemGroup Condition="'$(Configuration)'=='Debug'">
     <ClCompile Include="Tests\ModelTests.cpp" />
     <ClCompile Include="Tests\PersistenceTests.cpp" />
     <ClCompile Include="Tests\MonitorTests.cpp" />
@@ -175,16 +179,19 @@
     <ClInclude Include="Console\ProductionLineView.h" />
     <ClInclude Include="Console\ReleaseMenuView.h" />
     <ClInclude Include="Dummy\DummyDataGenerator.h" />
-    <ClInclude Include="Tests\TestFramework.h" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)'=='Debug'">
+    <ClInclude Include="Tests\Mocks\MockDataStore.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\packages\gmock.1.11.0\build\native\gmock.targets" Condition="Exists('..\packages\gmock.1.11.0\build\native\gmock.targets')" />
+    <!-- gtest/gmock 소스는 Debug 구성에서만 컴파일된다(Release 바이너리에서 테스트 프레임워크 제외). -->
+    <Import Project="..\packages\gmock.1.11.0\build\native\gmock.targets" Condition="'$(Configuration)'=='Debug' and Exists('..\packages\gmock.1.11.0\build\native\gmock.targets')" />
   </ImportGroup>
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild" Condition="'$(Configuration)'=='Debug'">
     <PropertyGroup>
       <ErrorText>이 프로젝트는 이 컴퓨터에 없는 NuGet 패키지를 참조합니다. 해당 패키지를 다운로드하려면 NuGet 패키지 복원을 사용하십시오. 자세한 내용은 http://go.microsoft.com/fwlink/?LinkID=322105를 참조하십시오. 누락된 파일은 {0}입니다.</ErrorText>
     </PropertyGroup>

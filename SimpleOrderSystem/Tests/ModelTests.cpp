@@ -1,29 +1,33 @@
 ﻿// Model 계층(OrderStatus/StockState 문자열 변환) 단위 테스트.
 // docs/01-개요.md 의 주문 상태 흐름(RESERVED/REJECTED/PRODUCING/CONFIRMED/RELEASE)과
 // docs/06-모니터링.md 의 재고 상태(여유/부족/고갈) 표기를 검증한다.
+// Model 은 Persistence::IDataStore 와 무관하므로 mock 없이 순수 단위 테스트로 작성한다.
 
-#include "TestFramework.h"
+#include <gtest/gtest.h>
 #include "../Model/Types.h"
 
 #include <stdexcept>
 
-TEST(Model_ToString_OrderStatus_각_상태별_문자열_반환) {
-    ASSERT_EQ(Model::ToString(Model::OrderStatus::RESERVED), std::string("RESERVED"));
-    ASSERT_EQ(Model::ToString(Model::OrderStatus::REJECTED), std::string("REJECTED"));
-    ASSERT_EQ(Model::ToString(Model::OrderStatus::PRODUCING), std::string("PRODUCING"));
-    ASSERT_EQ(Model::ToString(Model::OrderStatus::CONFIRMED), std::string("CONFIRMED"));
-    ASSERT_EQ(Model::ToString(Model::OrderStatus::RELEASE), std::string("RELEASE"));
+// OrderStatus 각 값이 규격대로 문자열로 변환되는지 확인한다.
+TEST(ModelToStringTest, OrderStatus_ReturnsExpectedStringForEachStatus) {
+    EXPECT_EQ(Model::ToString(Model::OrderStatus::RESERVED), std::string("RESERVED"));
+    EXPECT_EQ(Model::ToString(Model::OrderStatus::REJECTED), std::string("REJECTED"));
+    EXPECT_EQ(Model::ToString(Model::OrderStatus::PRODUCING), std::string("PRODUCING"));
+    EXPECT_EQ(Model::ToString(Model::OrderStatus::CONFIRMED), std::string("CONFIRMED"));
+    EXPECT_EQ(Model::ToString(Model::OrderStatus::RELEASE), std::string("RELEASE"));
 }
 
-TEST(Model_OrderStatusFromString_문자열을_상태로_역변환) {
-    ASSERT_TRUE(Model::OrderStatusFromString("RESERVED") == Model::OrderStatus::RESERVED);
-    ASSERT_TRUE(Model::OrderStatusFromString("REJECTED") == Model::OrderStatus::REJECTED);
-    ASSERT_TRUE(Model::OrderStatusFromString("PRODUCING") == Model::OrderStatus::PRODUCING);
-    ASSERT_TRUE(Model::OrderStatusFromString("CONFIRMED") == Model::OrderStatus::CONFIRMED);
-    ASSERT_TRUE(Model::OrderStatusFromString("RELEASE") == Model::OrderStatus::RELEASE);
+// 문자열을 OrderStatus 로 역변환한다.
+TEST(ModelOrderStatusFromStringTest, ParsesEachKnownStatusString) {
+    EXPECT_TRUE(Model::OrderStatusFromString("RESERVED") == Model::OrderStatus::RESERVED);
+    EXPECT_TRUE(Model::OrderStatusFromString("REJECTED") == Model::OrderStatus::REJECTED);
+    EXPECT_TRUE(Model::OrderStatusFromString("PRODUCING") == Model::OrderStatus::PRODUCING);
+    EXPECT_TRUE(Model::OrderStatusFromString("CONFIRMED") == Model::OrderStatus::CONFIRMED);
+    EXPECT_TRUE(Model::OrderStatusFromString("RELEASE") == Model::OrderStatus::RELEASE);
 }
 
-TEST(Model_OrderStatus_왕복변환_ToString_FromString_일치) {
+// ToString -> FromString 왕복 변환이 원래 값과 일치하는지 확인한다.
+TEST(ModelOrderStatusFromStringTest, RoundTripWithToStringYieldsOriginalStatus) {
     const Model::OrderStatus statuses[] = {
         Model::OrderStatus::RESERVED,
         Model::OrderStatus::REJECTED,
@@ -33,32 +37,23 @@ TEST(Model_OrderStatus_왕복변환_ToString_FromString_일치) {
     };
     for (const auto& status : statuses) {
         Model::OrderStatus roundTripped = Model::OrderStatusFromString(Model::ToString(status));
-        ASSERT_TRUE(roundTripped == status);
+        EXPECT_TRUE(roundTripped == status);
     }
 }
 
-TEST(Model_OrderStatusFromString_알수없는_문자열이면_예외발생) {
-    bool threw = false;
-    try {
-        Model::OrderStatusFromString("UNKNOWN");
-    } catch (const std::invalid_argument&) {
-        threw = true;
-    }
-    ASSERT_TRUE(threw);
+// 알 수 없는 문자열이면 invalid_argument 예외가 발생해야 한다.
+TEST(ModelOrderStatusFromStringTest, ThrowsInvalidArgumentForUnknownString) {
+    EXPECT_THROW(Model::OrderStatusFromString("UNKNOWN"), std::invalid_argument);
 }
 
-TEST(Model_OrderStatusFromString_빈문자열이면_예외발생) {
-    bool threw = false;
-    try {
-        Model::OrderStatusFromString("");
-    } catch (const std::invalid_argument&) {
-        threw = true;
-    }
-    ASSERT_TRUE(threw);
+// 빈 문자열이면 invalid_argument 예외가 발생해야 한다.
+TEST(ModelOrderStatusFromStringTest, ThrowsInvalidArgumentForEmptyString) {
+    EXPECT_THROW(Model::OrderStatusFromString(""), std::invalid_argument);
 }
 
-TEST(Model_ToString_StockState_각_상태별_한글_문자열_반환) {
-    ASSERT_EQ(Model::ToString(Model::StockState::ABUNDANT), std::string("여유"));
-    ASSERT_EQ(Model::ToString(Model::StockState::SHORTAGE), std::string("부족"));
-    ASSERT_EQ(Model::ToString(Model::StockState::DEPLETED), std::string("고갈"));
+// StockState 각 값이 한글 표기 문자열로 변환되는지 확인한다.
+TEST(ModelToStringTest, StockState_ReturnsExpectedKoreanStringForEachState) {
+    EXPECT_EQ(Model::ToString(Model::StockState::ABUNDANT), std::string("여유"));
+    EXPECT_EQ(Model::ToString(Model::StockState::SHORTAGE), std::string("부족"));
+    EXPECT_EQ(Model::ToString(Model::StockState::DEPLETED), std::string("고갈"));
 }

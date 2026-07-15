@@ -49,6 +49,9 @@
     <Filter Include="헤더 파일\Tests">
       <UniqueIdentifier>{c1a10002-0000-4000-8000-000000000006}</UniqueIdentifier>
     </Filter>
+    <Filter Include="헤더 파일\Tests\Mocks">
+      <UniqueIdentifier>{c1a10002-0000-4000-8000-000000000007}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -143,8 +146,8 @@
     <ClInclude Include="Dummy\DummyDataGenerator.h">
       <Filter>헤더 파일\Dummy</Filter>
     </ClInclude>
-    <ClInclude Include="Tests\TestFramework.h">
-      <Filter>헤더 파일\Tests</Filter>
+    <ClInclude Include="Tests\Mocks\MockDataStore.h">
+      <Filter>헤더 파일\Tests\Mocks</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
