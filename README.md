@@ -82,17 +82,27 @@ SimpleOrderSystem/
   Monitor/      OrderService(주문/재고/생산 큐 도메인 로직)
   Console/      AppController 및 메뉴별 View(시료/주문/승인/모니터링/생산라인/출고)
   Dummy/        DummyDataGenerator(테스트용 더미 데이터 생성)
-  Tests/        자체 테스트 프레임워크 및 모듈별 테스트
+  Tests/        gtest/gmock 기반 TC + 공유 Mock(Tests/Mocks/MockDataStore.h)
   main.cpp      진입점
+data/           samples.json, orders.json (런타임 자동 생성, git 미포함)
 ```
 
-## 빌드
+## 빌드 및 실행
 
-MSBuild 또는 Visual Studio로 빌드한다 (CMake 등 크로스플랫폼 빌드 시스템 미사용).
+MSBuild 또는 Visual Studio로 `SimpleOrderSystem.slnx`(새 XML 솔루션 형식)를 빌드한다 (CMake 등 크로스플랫폼 빌드 시스템 미사용).
 
 ```powershell
-msbuild SimpleOrderSystem.sln /p:Configuration=Debug /p:Platform=x64
+msbuild SimpleOrderSystem.slnx /p:Configuration=Debug /p:Platform=x64
+msbuild SimpleOrderSystem.slnx /p:Configuration=Release /p:Platform=x64
 ```
+
+- **Debug 빌드**(`x64\Debug\SimpleOrderSystem.exe`): gtest/gmock 기반 TC만 자동 수행하고 결과 코드로 즉시 종료한다(콘솔 앱은 실행되지 않는다) — TC 확인 전용.
+- **Release 빌드**(`x64\Release\SimpleOrderSystem.exe`): 테스트 코드가 전혀 포함되지 않으며, 바로 콘솔 애플리케이션이 실행된다.
+- `--seed` 옵션으로 실행하면 기본 더미 데이터셋(시료 12개, 상태별 주문 3건씩)을 생성한다: `SimpleOrderSystem.exe --seed`
+
+## 테스트
+
+테스트는 gtest/gmock(NuGet `gmock.1.11.0`)으로 작성되어 있으며 `Tests/` 폴더에 위치한다. 공유 `Tests/Mocks/MockDataStore.h`가 gmock 기반 `IDataStore` mock과 상태 보관용 fake를 함께 제공한다(gmock cookbook의 "Delegating Calls to a Fake" 패턴). Debug 빌드 실행이 곧 테스트 실행이다.
 
 ## 참고 문서
 
@@ -105,6 +115,7 @@ msbuild SimpleOrderSystem.sln /p:Configuration=Debug /p:Platform=x64
 - [docs/07-생산라인.md](docs/07-생산라인.md) — 생산 큐(FIFO), 실 생산량/시간 계산
 - [docs/08-출고처리.md](docs/08-출고처리.md) — 출고 처리(RELEASE 전환)
 - [docs/09-미션및제출방법.md](docs/09-미션및제출방법.md) — PoC/프로젝트 개발 미션 및 제출 규칙
+- [PRD.md](PRD.md) — 기능 명세를 통합 정리한 제품 요구사항 문서
 
 ## 미션 개요
 
