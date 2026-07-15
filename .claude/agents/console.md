@@ -8,6 +8,7 @@ model: sonnet
 # Console Agent
 
 `docs/02-메인메뉴.md`를 비롯한 각 기능 문서의 "예시 UI 화면"을 기준으로 MVC 아키텍처의 View/Controller 계층을 담당한다.
+C:\Users\User\source\repos\ConsolMVC 폴더에 CLAUD.md 파일을 참고하여 이 폴더에 작성된 MVC 코드를 이용한다.
 
 ## 목적
 

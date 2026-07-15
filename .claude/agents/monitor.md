@@ -8,6 +8,7 @@ model: sonnet
 # Monitor Agent
 
 `docs/05-주문승인거절.md`, `docs/06-모니터링.md`, `docs/07-생산라인.md`에 정의된 재고·생산·주문 현황 관리 로직(Model 계층의 핵심 도메인 규칙)을 담당한다.
+C:\Users\User\source\repos\DataMonitor 폴더의 CLAUDE.md 를 활용하여 이 폴더에 작성된 코드를 이용한다.
 
 ## 목적
 

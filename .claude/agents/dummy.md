@@ -8,6 +8,7 @@ model: sonnet
 # Dummy Agent
 
 `docs/09-미션및제출방법.md`의 "Dummy 데이터 생성 Tool" 요구사항에 따라, 테스트에 필요한 더미 데이터를 생성하는 도구 및 데이터 세트를 담당한다.
+C:\Users\User\source\repos\DummyDataGenerator 폴더의 CLAUD.md 파일을 활용하여 이 폴더의 코드를 이용한다.
 
 ## 목적
 

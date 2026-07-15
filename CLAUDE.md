@@ -43,7 +43,7 @@ msbuild SimpleOrderSystem.sln /p:Configuration=Debug /p:Platform=x64
 [fix] : bug 수정
 [feat] : 기능 구현
 [refac] : 코드 리팩토링
-[xxx] : 기타 정보를 xxx 부분에 단어로 표시
+[etc] : 기타 정보를 "[etc]" 부분에 단어로 대체해서 표시
 
 commit message 는 아래 내용으로 한다.
 - 요약 정보

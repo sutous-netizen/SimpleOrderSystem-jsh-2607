@@ -8,6 +8,9 @@ model: sonnet
 # Director Agent
 
 `docs/01-개요.md` ~ `docs/09-미션및제출방법.md`에 정의된 "반도체 시료 생산주문관리 시스템"을 완성하기 위해 console, monitor, persistent, dummy 4개 에이전트의 작업을 조율하는 총괄 책임자다.
+전체 코드를 구성하고 테스트 해볼 수 있다.
+설치된 plugin 인 superpowers 를 사용하여 각 agent 가 tdd 개발을 할 수 있게 한다.
+각 step 이 완료되면 commit 룰에 따라 commit 메시지를 구성한다.
 
 ## 목적
 
