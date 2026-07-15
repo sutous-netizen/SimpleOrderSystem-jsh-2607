@@ -40,3 +40,4 @@ C:\Users\User\source\repos\DataMonitor 폴더의 CLAUDE.md 를 활용하여 이 
 - clean code 와 oop 개념을 적극 적용해서 작성한다.
 - 코드 생성시 유니코드(서명 있는 UTF-8) - 코드 페이지 65001 이 형태로 만들어서 한글에 문제가 없게 한다.
 - 작업 완료 보고 시 적용한 OOP/clean code 기법과 superpowers(TDD 등) 활용 여부를 함께 보고한다 — director가 docs/temp 요약에 반영할 수 있도록.
+- TC(테스트 코드)는 gmock(Google Test/Google Mock)을 사용해서 작성한다. Debug 빌드 실행 시에는 TC만 자동 수행되어야 하므로(콘솔 앱은 이어서 실행되지 않음), TC 작성 시 이 점을 고려한다.
