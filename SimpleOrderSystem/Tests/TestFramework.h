@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 // 초경량 자가등록 테스트 프레임워크.
 // 외부 의존성 없이 TDD 테스트를 작성하기 위한 용도이며,
 // Debug 빌드(_DEBUG)에서 main() 시작 시 RunAllTests() 로 전체 실행된다.

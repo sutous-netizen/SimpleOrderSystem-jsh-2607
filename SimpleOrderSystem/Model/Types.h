@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 // 공유 도메인 모델 정의 (Model 계층 공통 계약)
 // 모든 에이전트(console/monitor/persistent/dummy)는 이 헤더의 타입을 그대로 사용한다.
 // docs/01-개요.md ~ docs/08-출고처리.md 기준.

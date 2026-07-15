@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 // JSON 파일 기반 IDataStore 구현체.
 // 외부 라이브러리 없이 최소한의 JSON 파서/라이터를 내부에 캡슐화한다.
 // console/monitor/dummy 에이전트는 IDataStore 인터페이스를 통해서만 이 클래스를 사용해야 한다.

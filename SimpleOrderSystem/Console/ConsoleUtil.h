@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 // Console 계층 공용 유틸리티 (문자열 트림, 숫자 파싱, 현재 시각 문자열 등).
 // View/Controller 여러 파일에서 공유하는 소소한 헬퍼만 모아둔다.
 

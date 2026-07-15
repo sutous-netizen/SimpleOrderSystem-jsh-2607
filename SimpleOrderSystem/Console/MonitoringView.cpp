@@ -1,4 +1,4 @@
-#include "MonitoringView.h"
+﻿#include "MonitoringView.h"
 #include "ConsoleUtil.h"
 
 #include <iostream>

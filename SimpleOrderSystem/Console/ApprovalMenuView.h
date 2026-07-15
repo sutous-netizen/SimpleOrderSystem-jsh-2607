@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 // [3] 주문 승인/거절 화면 (docs/05-주문승인거절.md)
 
 #include "../Persistence/IDataStore.h"

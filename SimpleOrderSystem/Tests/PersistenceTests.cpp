@@ -1,4 +1,4 @@
-// JsonDataStore(Persistence) TDD 테스트.
+﻿// JsonDataStore(Persistence) TDD 테스트.
 // 실제 data/ 폴더를 건드리지 않도록 임시 디렉터리에 고유 파일명을 사용하고,
 // 테스트 종료 시 생성한 파일을 정리한다.
 

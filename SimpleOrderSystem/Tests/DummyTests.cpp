@@ -1,4 +1,4 @@
-// DummyDataGenerator TDD 테스트.
+﻿// DummyDataGenerator TDD 테스트.
 // 실제 파일 기반 저장소(JsonDataStore) 대신, 이 파일 안에서 인메모리 Fake IDataStore를
 // 직접 구현해 사용한다(Dummy 에이전트는 저장 방식을 직접 다루지 않고 인터페이스만 소비).
 

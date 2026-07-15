@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 // 도메인 규칙(재고 계산, 상태 전이, 생산 큐 FIFO)의 단일 진실 공급원.
 // docs/05-주문승인거절.md, docs/06-모니터링.md, docs/07-생산라인.md 기준.
 // console/dummy 에이전트는 이 서비스를 호출만 하고 로직을 재구현하지 않는다.

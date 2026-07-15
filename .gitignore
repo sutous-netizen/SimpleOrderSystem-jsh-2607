@@ -7,3 +7,5 @@ Release/
 *.pdb
 *.obj
 *.log
+packages/
+SimpleOrderSystem/data/

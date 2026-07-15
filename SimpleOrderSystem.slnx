@@ -2,8 +2,6 @@
   <Configurations>
     <Platform Name="x64" />
     <Platform Name="Win32" />
-    <BuildType Name="Debug" />
-    <BuildType Name="Release" />
   </Configurations>
-  <Project Path="SimpleOrderSystem/SimpleOrderSystem.vcxproj" />
+  <Project Path="SimpleOrderSystem/SimpleOrderSystem.vcxproj" Id="ce4bce58-c6ee-441c-935c-bdd92e334ec7" />
 </Solution>

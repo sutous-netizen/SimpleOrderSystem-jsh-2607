@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 // 영속성 계층 공용 인터페이스.
 // persistent 에이전트가 구현체(JsonDataStore)를 제공하고,
 // console/monitor/dummy 에이전트는 이 인터페이스만 바라본다.

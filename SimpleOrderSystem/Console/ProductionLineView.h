@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 // [5] 생산라인 조회 화면 (docs/07-생산라인.md)
 
 #include "../Monitor/OrderService.h"

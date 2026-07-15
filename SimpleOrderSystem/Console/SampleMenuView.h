@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 // [1] 시료 관리 화면 (docs/03-시료관리.md)
 // 시료 등록/목록/검색은 도메인 규칙이 거의 없는 단순 CRUD이므로 IDataStore 를 직접 사용한다.
 

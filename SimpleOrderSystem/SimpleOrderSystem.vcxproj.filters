@@ -144,4 +144,7 @@
       <Filter>헤더 파일\Tests</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
 </Project>

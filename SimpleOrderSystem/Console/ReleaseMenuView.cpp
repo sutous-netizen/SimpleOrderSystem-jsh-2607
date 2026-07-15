@@ -1,4 +1,4 @@
-#include "ReleaseMenuView.h"
+﻿#include "ReleaseMenuView.h"
 #include "ConsoleUtil.h"
 
 #include <iostream>
