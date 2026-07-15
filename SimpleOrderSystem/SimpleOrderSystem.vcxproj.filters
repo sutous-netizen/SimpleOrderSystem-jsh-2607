@@ -13,5 +13,135 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="소스 파일\Model">
+      <UniqueIdentifier>{c1a10001-0000-4000-8000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Persistence">
+      <UniqueIdentifier>{c1a10001-0000-4000-8000-000000000002}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Monitor">
+      <UniqueIdentifier>{c1a10001-0000-4000-8000-000000000003}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Console">
+      <UniqueIdentifier>{c1a10001-0000-4000-8000-000000000004}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Dummy">
+      <UniqueIdentifier>{c1a10001-0000-4000-8000-000000000005}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Tests">
+      <UniqueIdentifier>{c1a10001-0000-4000-8000-000000000006}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\Model">
+      <UniqueIdentifier>{c1a10002-0000-4000-8000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\Persistence">
+      <UniqueIdentifier>{c1a10002-0000-4000-8000-000000000002}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\Monitor">
+      <UniqueIdentifier>{c1a10002-0000-4000-8000-000000000003}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\Console">
+      <UniqueIdentifier>{c1a10002-0000-4000-8000-000000000004}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\Dummy">
+      <UniqueIdentifier>{c1a10002-0000-4000-8000-000000000005}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\Tests">
+      <UniqueIdentifier>{c1a10002-0000-4000-8000-000000000006}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Model\Types.cpp">
+      <Filter>소스 파일\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="Persistence\JsonDataStore.cpp">
+      <Filter>소스 파일\Persistence</Filter>
+    </ClCompile>
+    <ClCompile Include="Monitor\OrderService.cpp">
+      <Filter>소스 파일\Monitor</Filter>
+    </ClCompile>
+    <ClCompile Include="Console\ConsoleUtil.cpp">
+      <Filter>소스 파일\Console</Filter>
+    </ClCompile>
+    <ClCompile Include="Console\AppController.cpp">
+      <Filter>소스 파일\Console</Filter>
+    </ClCompile>
+    <ClCompile Include="Console\SampleMenuView.cpp">
+      <Filter>소스 파일\Console</Filter>
+    </ClCompile>
+    <ClCompile Include="Console\OrderMenuView.cpp">
+      <Filter>소스 파일\Console</Filter>
+    </ClCompile>
+    <ClCompile Include="Console\ApprovalMenuView.cpp">
+      <Filter>소스 파일\Console</Filter>
+    </ClCompile>
+    <ClCompile Include="Console\MonitoringView.cpp">
+      <Filter>소스 파일\Console</Filter>
+    </ClCompile>
+    <ClCompile Include="Console\ProductionLineView.cpp">
+      <Filter>소스 파일\Console</Filter>
+    </ClCompile>
+    <ClCompile Include="Console\ReleaseMenuView.cpp">
+      <Filter>소스 파일\Console</Filter>
+    </ClCompile>
+    <ClCompile Include="Dummy\DummyDataGenerator.cpp">
+      <Filter>소스 파일\Dummy</Filter>
+    </ClCompile>
+    <ClCompile Include="Tests\PersistenceTests.cpp">
+      <Filter>소스 파일\Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="Tests\MonitorTests.cpp">
+      <Filter>소스 파일\Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="Tests\DummyTests.cpp">
+      <Filter>소스 파일\Tests</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Model\Types.h">
+      <Filter>헤더 파일\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="Persistence\IDataStore.h">
+      <Filter>헤더 파일\Persistence</Filter>
+    </ClInclude>
+    <ClInclude Include="Persistence\JsonDataStore.h">
+      <Filter>헤더 파일\Persistence</Filter>
+    </ClInclude>
+    <ClInclude Include="Monitor\OrderService.h">
+      <Filter>헤더 파일\Monitor</Filter>
+    </ClInclude>
+    <ClInclude Include="Console\ConsoleUtil.h">
+      <Filter>헤더 파일\Console</Filter>
+    </ClInclude>
+    <ClInclude Include="Console\AppController.h">
+      <Filter>헤더 파일\Console</Filter>
+    </ClInclude>
+    <ClInclude Include="Console\SampleMenuView.h">
+      <Filter>헤더 파일\Console</Filter>
+    </ClInclude>
+    <ClInclude Include="Console\OrderMenuView.h">
+      <Filter>헤더 파일\Console</Filter>
+    </ClInclude>
+    <ClInclude Include="Console\ApprovalMenuView.h">
+      <Filter>헤더 파일\Console</Filter>
+    </ClInclude>
+    <ClInclude Include="Console\MonitoringView.h">
+      <Filter>헤더 파일\Console</Filter>
+    </ClInclude>
+    <ClInclude Include="Console\ProductionLineView.h">
+      <Filter>헤더 파일\Console</Filter>
+    </ClInclude>
+    <ClInclude Include="Console\ReleaseMenuView.h">
+      <Filter>헤더 파일\Console</Filter>
+    </ClInclude>
+    <ClInclude Include="Dummy\DummyDataGenerator.h">
+      <Filter>헤더 파일\Dummy</Filter>
+    </ClInclude>
+    <ClInclude Include="Tests\TestFramework.h">
+      <Filter>헤더 파일\Tests</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
