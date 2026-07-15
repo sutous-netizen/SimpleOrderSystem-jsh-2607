@@ -1,8 +1,13 @@
 .vs/
 *.pdf
-x64/
-Debug/
-Release/
+/x64/
+/Debug/
+/Release/
+SimpleOrderSystem/x64/
+SimpleOrderSystem/Debug/
+SimpleOrderSystem/Release/
+SimpleOrderSystem/Win32/
+SimpleOrderSystem/SimpleOr.*/
 *.ilk
 *.pdb
 *.obj

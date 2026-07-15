@@ -166,6 +166,9 @@
     <ClCompile Include="Tests\DummyTests.cpp" />
     <ClCompile Include="Tests\ConsoleUtilTests.cpp" />
     <ClCompile Include="Tests\ConsoleViewTests.cpp" />
+    <ClCompile Include="Tests\Integrate\Debug\OrderLifecycleIntegrationTests.cpp" />
+    <ClCompile Include="Tests\Integrate\Debug\RestartAndDummySeedIntegrationTests.cpp" />
+    <ClCompile Include="Tests\Integrate\Debug\SeedDataConsistencyIntegrationTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Model\Types.h" />

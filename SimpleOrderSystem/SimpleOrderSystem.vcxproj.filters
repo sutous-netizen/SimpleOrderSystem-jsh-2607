@@ -52,6 +52,9 @@
     <Filter Include="헤더 파일\Tests\Mocks">
       <UniqueIdentifier>{c1a10002-0000-4000-8000-000000000007}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\Tests\Integrate">
+      <UniqueIdentifier>{c1a10001-0000-4000-8000-000000000007}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -110,6 +113,15 @@
     </ClCompile>
     <ClCompile Include="Tests\ConsoleViewTests.cpp">
       <Filter>소스 파일\Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="Tests\Integrate\Debug\OrderLifecycleIntegrationTests.cpp">
+      <Filter>소스 파일\Tests\Integrate</Filter>
+    </ClCompile>
+    <ClCompile Include="Tests\Integrate\Debug\RestartAndDummySeedIntegrationTests.cpp">
+      <Filter>소스 파일\Tests\Integrate</Filter>
+    </ClCompile>
+    <ClCompile Include="Tests\Integrate\Debug\SeedDataConsistencyIntegrationTests.cpp">
+      <Filter>소스 파일\Tests\Integrate</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
