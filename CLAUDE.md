@@ -13,6 +13,20 @@
 
 첫 소스 파일을 추가할 때는 `SimpleOrderSystem.vcxproj.filters`에서 `.cpp` 파일은 "소스 파일" 필터 그룹에, 헤더 파일은 "헤더 파일" 필터 그룹에 넣고(필터 파일은 한글 라벨 사용), `SimpleOrderSystem.vcxproj`에도 대응하는 `<ClCompile>`/`<ClInclude>` 항목을 추가해야 합니다.
 
+## 기능 명세 문서
+
+`docs/` 폴더에 과제 안내 자료(`[CRA_AI] Day3_개인과제_반도체시료관리.pdf`)를 기반으로 작성한 기능 명세가 있습니다. 기능 구현 전 반드시 해당 문서를 먼저 확인하세요.
+
+- `docs/01-개요.md` : 배경, 역할별 흐름도, 시스템 개요, 주문 상태(RESERVED/REJECTED/PRODUCING/CONFIRMED/RELEASE) 흐름
+- `docs/02-메인메뉴.md` : 콘솔 메인 메뉴 구성
+- `docs/03-시료관리.md` : 시료 등록/조회/검색 (시료 ID, 이름, 평균 생산시간, 수율)
+- `docs/04-시료주문.md` : 시료 예약(주문 접수)
+- `docs/05-주문승인거절.md` : 주문 승인(재고 충분 시 CONFIRMED, 부족 시 PRODUCING)/거절(REJECTED) 처리
+- `docs/06-모니터링.md` : 상태별 주문 현황, 시료별 재고 현황(여유/부족/고갈)
+- `docs/07-생산라인.md` : 생산 큐(FIFO), 실 생산량(`ceil(부족분/수율)`) 및 생산 시간 계산
+- `docs/08-출고처리.md` : CONFIRMED 주문의 출고 처리(RELEASE 전환)
+- `docs/09-미션및제출방법.md` : PoC/프로젝트 개발 미션 및 Repository 제출 규칙
+
 ## 빌드
 
 MSBuild 또는 Visual Studio로 빌드합니다. CMake 등 크로스플랫폼 빌드 시스템은 사용하지 않습니다.
@@ -29,7 +43,7 @@ msbuild SimpleOrderSystem.sln /p:Configuration=Debug /p:Platform=x64
 [fix] : bug 수정
 [feat] : 기능 구현
 [refac] : 코드 리팩토링
-[xxx] : 기타 정보 표시
+[xxx] : 기타 정보를 xxx 부분에 단어로 표시
 
 commit message 는 아래 내용으로 한다.
 - 요약 정보
