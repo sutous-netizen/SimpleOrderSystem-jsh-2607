@@ -27,6 +27,10 @@ void SampleMenuView::Run() {
 
         if (choice == "0") {
             return;
+        } else if (IsInputExhausted()) {
+            // 표준 입력이 고갈된 상태에서 무한 재시도하지 않도록 종료한다.
+            std::cout << "입력이 종료되었습니다. 뒤로 갑니다.\n";
+            return;
         } else if (choice == "1") {
             ShowRegister();
         } else if (choice == "2") {
@@ -134,9 +138,9 @@ void SampleMenuView::PrintSampleTable(const std::vector<Model::Sample>& samples)
     std::cout << std::left
                << std::setw(8) << "ID"
                << PadDisplayWidth("시료명", kNameColumnWidth)
-               << std::setw(14) << "평균 생산시간"
-               << std::setw(8) << "수율"
-               << std::setw(10) << "현재 재고" << "\n";
+               << PadDisplayWidth("평균 생산시간", 14)
+               << PadDisplayWidth("수율", 8)
+               << PadDisplayWidth("현재 재고", 10) << "\n";
 
     for (const auto& sample : samples) {
         std::cout << std::left

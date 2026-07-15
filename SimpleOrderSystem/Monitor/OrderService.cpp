@@ -282,8 +282,10 @@ std::vector<OrderService::ScheduledProduction> OrderService::BuildProductionSche
         }
     }
 
-    // FIFO: 생산 큐 등록(=PRODUCING 전환) 시각(updatedAt) 순서로 정렬
-    std::sort(producing.begin(), producing.end(), [](const Model::Order& a, const Model::Order& b) {
+    // FIFO: 생산 큐 등록(=PRODUCING 전환) 시각(updatedAt) 순서로 정렬.
+    // stable_sort를 사용해, 같은 초에 등록된 주문들은 저장소에 기록된(=승인 처리된) 원래 순서를
+    // 그대로 유지한다(std::sort는 동률 시 순서를 보장하지 않아 FIFO가 실행마다 달라질 수 있었다).
+    std::stable_sort(producing.begin(), producing.end(), [](const Model::Order& a, const Model::Order& b) {
         return a.updatedAt < b.updatedAt;
     });
 
@@ -370,12 +372,16 @@ void OrderService::CatchUpProduction() {
             continue;
         }
 
-        // 생산 완료 처리: PRODUCING -> CONFIRMED, 재고에 실 생산량(수율 반영 총 생산량) 반영
+        // 생산 완료 처리: PRODUCING -> CONFIRMED.
+        // 재고에는 실 생산량(수율 반영 총 생산량)을 더하고, 이 주문이 확정(CONFIRMED)되며
+        // 소비하는 주문 수량만큼을 차감한다(즉시 CONFIRMED 경로의 "재고 차감"과 동일한 회계 처리 —
+        // 그렇지 않으면 이 주문의 수요가 재고에서 빠지지 않아 재고가 이중으로 잡혀 다른 주문이
+        // 실제로는 존재하지 않는 재고에 대해 이중 배정될 수 있다).
         auto sIt = std::find_if(samples.begin(), samples.end(), [&](const Model::Sample& s) {
             return s.id == oIt->sampleId;
         });
         if (sIt != samples.end()) {
-            sIt->stock += oIt->actualProductionQty;
+            sIt->stock += oIt->actualProductionQty - oIt->quantity;
             samplesChanged = true;
         }
 

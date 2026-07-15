@@ -159,8 +159,10 @@ TEST_F(OrderServiceTest, GetOrderCountsByStatus_ExcludesRejected) {
 
 // 생산 완료 시각이 경과한 PRODUCING 주문은 CatchUpProduction 호출 시 CONFIRMED로 전환되고 재고가 반영된다.
 TEST_F(OrderServiceTest, CatchUpProduction_CompletedOrder_TransitionsToConfirmedAndUpdatesStock) {
-    // 부족분 50, 수율 1.0 -> 실생산량 50, 평균생산시간 1min -> 총생산시간 50min
-    fake.SaveSamples({ MakeSample("S-004", "GaN 에피택셜-4인치", 1.0, 1.0, 0) });
+    // 기존 재고 10, 주문 수량 50 -> 부족분 40, 수율 0.5 -> 실생산량 ceil(40/0.5)=80, 평균생산시간 1min -> 총생산시간 80min.
+    // 생산 완료 시 재고 = 기존(10) + 실생산량(80) - 이 주문이 소비하는 수량(50) = 40.
+    // (실생산량을 전량 더하기만 하고 주문 수량을 차감하지 않으면 재고가 이중으로 잡히는 회귀를 방지하는 테스트.)
+    fake.SaveSamples({ MakeSample("S-004", "GaN 에피택셜-4인치", 1.0, 0.5, 10) });
 
     Model::Order order;
     order.orderNo = "ORD-TEST-0001";
@@ -168,11 +170,11 @@ TEST_F(OrderServiceTest, CatchUpProduction_CompletedOrder_TransitionsToConfirmed
     order.customerName = "테스트고객";
     order.quantity = 50;
     order.status = Model::OrderStatus::PRODUCING;
-    order.shortage = 50;
-    order.actualProductionQty = 50;
-    order.totalProductionTimeMin = 50.0;
+    order.shortage = 40;
+    order.actualProductionQty = 80;
+    order.totalProductionTimeMin = 80.0;
     order.createdAt = PastString(120.0);
-    order.updatedAt = PastString(120.0); // 120분 전 큐잉 -> 총생산시간(50분) 이미 경과
+    order.updatedAt = PastString(120.0); // 120분 전 큐잉 -> 총생산시간(80분) 이미 경과
     fake.SaveOrders({ order });
 
     Monitor::OrderService service(mock);
@@ -184,7 +186,7 @@ TEST_F(OrderServiceTest, CatchUpProduction_CompletedOrder_TransitionsToConfirmed
 
     auto sampleAfter = fake.FindSampleById("S-004");
     ASSERT_TRUE(sampleAfter.has_value());
-    EXPECT_EQ(sampleAfter->stock, 50); // 0 + 실생산량(50) 반영
+    EXPECT_EQ(sampleAfter->stock, 40); // 10 + 실생산량(80) - 주문수량(50) = 40
 }
 
 // 생산 완료 시각이 아직 경과하지 않은 PRODUCING 주문은 CatchUpProduction 호출 후에도 상태가 유지된다.
@@ -213,6 +215,50 @@ TEST_F(OrderServiceTest, CatchUpProduction_IncompleteOrder_KeepsProducingStatus)
 
     auto sampleAfter = fake.FindSampleById("S-005");
     EXPECT_EQ(sampleAfter->stock, 0);
+}
+
+// 생산 완료로 CONFIRMED 전환된 주문의 수량이 재고에서 정확히 소비되어야,
+// 뒤이은 같은 시료의 다른 RESERVED 주문이 실제로는 존재하지 않는 재고에 대해
+// 이중 배정(즉시 CONFIRMED로 잘못 승인)되지 않는다.
+TEST_F(OrderServiceTest, CatchUpProduction_DoesNotDoubleBookStockForSubsequentOrder) {
+    // 기존 재고 30, 첫 주문 수량 200 -> 부족분 170, 수율 0.92 -> 실생산량 ceil(170/0.92)=185.
+    fake.SaveSamples({ MakeSample("S-006", "SiC 파워기판-6인치", 1.0, 0.92, 30) });
+
+    Model::Order firstOrder;
+    firstOrder.orderNo = "ORD-TEST-0003";
+    firstOrder.sampleId = "S-006";
+    firstOrder.customerName = "고객A";
+    firstOrder.quantity = 200;
+    firstOrder.status = Model::OrderStatus::PRODUCING;
+    firstOrder.shortage = 170;
+    firstOrder.actualProductionQty = 185;
+    firstOrder.totalProductionTimeMin = 185.0;
+    firstOrder.createdAt = PastString(300.0);
+    firstOrder.updatedAt = PastString(300.0); // 300분 전 큐잉 -> 총생산시간(185분) 이미 경과
+
+    Model::Order secondOrder;
+    secondOrder.orderNo = "ORD-TEST-0004";
+    secondOrder.sampleId = "S-006";
+    secondOrder.customerName = "고객B";
+    secondOrder.quantity = 200;
+    secondOrder.status = Model::OrderStatus::RESERVED;
+    secondOrder.createdAt = NowString();
+    secondOrder.updatedAt = NowString();
+
+    fake.SaveOrders({ firstOrder, secondOrder });
+
+    Monitor::OrderService service(mock);
+    service.CatchUpProduction();
+
+    // 생산 완료 후 재고 = 30(기존) + 185(실생산량) - 200(첫 주문 소비) = 15.
+    auto sampleAfter = fake.FindSampleById("S-006");
+    ASSERT_TRUE(sampleAfter.has_value());
+    EXPECT_EQ(sampleAfter->stock, 15);
+
+    // 재고(15)가 두 번째 주문 수량(200)보다 훨씬 적으므로, 승인 시 즉시 CONFIRMED가 아니라
+    // PRODUCING(생산 큐 등록)으로 전환되어야 한다 — 이중 배정되지 않았음을 증명한다.
+    const Model::Order approvedSecond = service.ApproveOrder("ORD-TEST-0004");
+    EXPECT_TRUE(approvedSecond.status == Model::OrderStatus::PRODUCING);
 }
 
 // 시료별 재고 상태가 여유/부족/고갈로 올바르게 판정된다.

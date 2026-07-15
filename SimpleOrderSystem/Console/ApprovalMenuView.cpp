@@ -31,18 +31,18 @@ void ApprovalMenuView::Run() {
 
     std::cout << "승인 대기 중인 예약 목록 (RESERVED)\n";
     std::cout << std::left
-               << std::setw(6) << "번호"
-               << std::setw(12) << "주문번호"
+               << PadDisplayWidth("번호", 6)
+               << PadDisplayWidth("주문번호", 20)
                << PadDisplayWidth("고객", kCustomerColumnWidth)
                << PadDisplayWidth("시료", kSampleColumnWidth)
-               << std::setw(10) << "수량"
+               << PadDisplayWidth("수량", 10)
                << "상태" << "\n";
 
     for (size_t i = 0; i < pending.size(); ++i) {
         const auto& order = pending[i];
         std::cout << std::left
                    << std::setw(6) << ("[" + std::to_string(i + 1) + "]")
-                   << std::setw(12) << order.orderNo
+                   << std::setw(20) << order.orderNo
                    << PadDisplayWidth(order.customerName, kCustomerColumnWidth)
                    << PadDisplayWidth(SampleNameOf(store_, order.sampleId), kSampleColumnWidth)
                    << std::setw(10) << (std::to_string(order.quantity) + " ea")
@@ -71,7 +71,14 @@ void ApprovalMenuView::Run() {
     }
     std::cout << "주문 수량 " << target.quantity << " ea\n";
 
-    if (!ReadYesNo("\n[Y] 승인   [N] 거절\n선택 > ")) {
+    const bool approve = ReadYesNo("\n[Y] 승인   [N] 거절\n선택 > ");
+    if (IsInputExhausted()) {
+        // 입력 고갈은 "거절"이 아니라 "취소"로 취급한다 — 되돌릴 수 없는 REJECTED 전이를
+        // 사용자 의사와 무관하게 실행하지 않기 위함이다.
+        std::cout << "입력이 종료되었습니다. 처리를 취소합니다.\n";
+        return;
+    }
+    if (!approve) {
         const Model::Order rejected = orderService_.RejectOrder(target.orderNo);
         std::cout << "\n거절 완료.\n";
         std::cout << "상태 변경  RESERVED → " << Model::ToString(rejected.status) << "\n";

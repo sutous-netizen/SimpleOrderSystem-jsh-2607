@@ -16,6 +16,10 @@ void MonitoringView::Run() {
 
         if (choice == "0") {
             return;
+        } else if (IsInputExhausted()) {
+            // 표준 입력이 고갈된 상태에서 무한 재시도하지 않도록 종료한다.
+            std::cout << "입력이 종료되었습니다. 뒤로 갑니다.\n";
+            return;
         } else if (choice == "1") {
             ShowOrderCounts();
         } else if (choice == "2") {
@@ -43,7 +47,7 @@ void MonitoringView::ShowInventory() {
     constexpr int kSampleColumnWidth = 22;
 
     std::cout << "\n재고 현황\n";
-    std::cout << std::left << PadDisplayWidth("시료명", kSampleColumnWidth) << std::setw(10) << "재고" << "상태\n";
+    std::cout << std::left << PadDisplayWidth("시료명", kSampleColumnWidth) << PadDisplayWidth("재고", 10) << "상태\n";
 
     const auto inventory = orderService_.GetInventoryStatus();
     for (const auto& item : inventory) {

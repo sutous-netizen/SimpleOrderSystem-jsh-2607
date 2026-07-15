@@ -16,29 +16,44 @@ AppController::AppController(Persistence::IDataStore& store, Monitor::OrderServi
 
 void AppController::Run() {
     // 재실행 시 실제 경과 시간을 반영해 완료된 생산을 처리 (docs/01-개요.md 추가요구사항)
-    orderService_.CatchUpProduction();
+    // 손상된 데이터 파일 등으로 예외가 발생해도 앱 전체가 죽지 않도록 방어한다.
+    try {
+        orderService_.CatchUpProduction();
+    } catch (const std::exception& e) {
+        std::cout << "\n[경고] 생산 현황 갱신 중 오류가 발생했습니다: " << e.what() << "\n";
+    }
 
     while (true) {
-        ShowMainMenu();
-        const std::string choice = ReadLine("\n 선택 > ");
+        // 서브 메뉴/도메인 계층에서 던진 예외(손상된 데이터, 잘못된 상태 전이 등)가
+        // 프로그램 전체를 종료시키지 않고 메인 메뉴로 안전하게 복귀하도록 감싼다.
+        try {
+            ShowMainMenu();
+            const std::string choice = ReadLine("\n 선택 > ");
 
-        if (choice == "0") {
-            std::cout << "\n프로그램을 종료합니다.\n";
-            return;
-        } else if (choice == "1") {
-            SampleMenuView(store_).Run();
-        } else if (choice == "2") {
-            OrderMenuView(store_, orderService_).Run();
-        } else if (choice == "3") {
-            ApprovalMenuView(store_, orderService_).Run();
-        } else if (choice == "4") {
-            MonitoringView(orderService_).Run();
-        } else if (choice == "5") {
-            ProductionLineView(orderService_).Run();
-        } else if (choice == "6") {
-            ReleaseMenuView(store_, orderService_).Run();
-        } else {
-            std::cout << "\n잘못된 선택입니다. 다시 입력하세요.\n";
+            if (choice == "0") {
+                std::cout << "\n프로그램을 종료합니다.\n";
+                return;
+            } else if (IsInputExhausted()) {
+                // 표준 입력이 고갈된 상태에서 무한 재시도하지 않도록 종료한다.
+                std::cout << "\n입력이 종료되었습니다. 프로그램을 종료합니다.\n";
+                return;
+            } else if (choice == "1") {
+                SampleMenuView(store_).Run();
+            } else if (choice == "2") {
+                OrderMenuView(store_, orderService_).Run();
+            } else if (choice == "3") {
+                ApprovalMenuView(store_, orderService_).Run();
+            } else if (choice == "4") {
+                MonitoringView(orderService_).Run();
+            } else if (choice == "5") {
+                ProductionLineView(orderService_).Run();
+            } else if (choice == "6") {
+                ReleaseMenuView(store_, orderService_).Run();
+            } else {
+                std::cout << "\n잘못된 선택입니다. 다시 입력하세요.\n";
+            }
+        } catch (const std::exception& e) {
+            std::cout << "\n[오류] 처리 중 문제가 발생했습니다: " << e.what() << "\n메인 메뉴로 돌아갑니다.\n";
         }
     }
 }

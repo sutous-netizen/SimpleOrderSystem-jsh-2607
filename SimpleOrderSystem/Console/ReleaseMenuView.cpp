@@ -31,8 +31,8 @@ void ReleaseMenuView::Run() {
 
     std::cout << "출고 가능 주문 (CONFIRMED)\n";
     std::cout << std::left
-               << std::setw(6) << "번호"
-               << std::setw(12) << "주문번호"
+               << PadDisplayWidth("번호", 6)
+               << PadDisplayWidth("주문번호", 20)
                << PadDisplayWidth("고객", kCustomerColumnWidth)
                << PadDisplayWidth("시료", kSampleColumnWidth)
                << "수량\n";
@@ -41,7 +41,7 @@ void ReleaseMenuView::Run() {
         const auto& order = releasable[i];
         std::cout << std::left
                    << std::setw(6) << ("[" + std::to_string(i + 1) + "]")
-                   << std::setw(12) << order.orderNo
+                   << std::setw(20) << order.orderNo
                    << PadDisplayWidth(order.customerName, kCustomerColumnWidth)
                    << PadDisplayWidth(SampleNameOf(store_, order.sampleId), kSampleColumnWidth)
                    << (std::to_string(order.quantity) + " ea") << "\n";

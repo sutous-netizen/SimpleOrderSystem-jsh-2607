@@ -53,21 +53,21 @@ void ProductionLineView::Run() {
     constexpr int kSampleColumnWidth = 22;
 
     std::cout << std::left
-               << std::setw(6) << "순서"
-               << std::setw(12) << "주문번호"
+               << PadDisplayWidth("순서", 6)
+               << PadDisplayWidth("주문번호", 20)
                << PadDisplayWidth("시료", kSampleColumnWidth)
-               << std::setw(10) << "주문량"
-               << std::setw(10) << "부족분"
-               << std::setw(10) << "실생산량"
-               << std::setw(12) << "총생산시간"
-               << std::setw(8) << "진행률"
+               << PadDisplayWidth("주문량", 10)
+               << PadDisplayWidth("부족분", 10)
+               << PadDisplayWidth("실생산량", 10)
+               << PadDisplayWidth("총생산시간", 12)
+               << PadDisplayWidth("진행률", 8)
                << "예상완료\n";
 
     for (size_t i = 0; i < queue.size(); ++i) {
         const auto& item = queue[i];
         std::cout << std::left
                    << std::setw(6) << (std::to_string(i + 1))
-                   << std::setw(12) << item.order.orderNo
+                   << std::setw(20) << item.order.orderNo
                    << PadDisplayWidth(item.sample.name, kSampleColumnWidth)
                    << std::setw(10) << (std::to_string(item.order.quantity) + " ea")
                    << std::setw(10) << (std::to_string(item.order.shortage) + " ea")

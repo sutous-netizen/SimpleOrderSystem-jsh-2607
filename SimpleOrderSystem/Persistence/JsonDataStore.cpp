@@ -250,16 +250,29 @@ JsonValue ParseJson(const std::string& text) {
 // ---- 라이터 ----
 
 std::string EscapeJsonString(const std::string& s) {
+    static const char kHexDigits[] = "0123456789abcdef";
+
     std::string result;
     result.reserve(s.size() + 2);
-    for (char c : s) {
+    for (unsigned char c : s) {
         switch (c) {
             case '"': result += "\\\""; break;
             case '\\': result += "\\\\"; break;
             case '\n': result += "\\n"; break;
             case '\t': result += "\\t"; break;
             case '\r': result += "\\r"; break;
-            default: result.push_back(c); break;
+            case '\b': result += "\\b"; break;
+            case '\f': result += "\\f"; break;
+            default:
+                if (c < 0x20) {
+                    // 그 외 제어문자(0x00~0x1F)는 \u00XX 형태로 이스케이프해 유효한 JSON을 보장한다.
+                    result += "\\u00";
+                    result.push_back(kHexDigits[(c >> 4) & 0xF]);
+                    result.push_back(kHexDigits[c & 0xF]);
+                } else {
+                    result.push_back(static_cast<char>(c));
+                }
+                break;
         }
     }
     return result;
