@@ -1,0 +1,9 @@
+.vs/
+*.pdf
+x64/
+Debug/
+Release/
+*.ilk
+*.pdb
+*.obj
+*.log
