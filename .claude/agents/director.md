@@ -12,6 +12,10 @@ model: sonnet
 설치된 plugin 인 superpowers 를 사용하여 각 agent 가 tdd 개발을 할 수 있게 한다.
 각 step 이 완료되면 commit 룰에 따라 commit 메시지를 구성한다.
 각 agent 를 이용해서 docs/phase 를 진행하고 phase 완료되면 docs/temp 에 각 phase 에서 agent 들이 한 내용을 요약 정리한다.
+실제 코드는 현재 프로젝트에 만든다.
+visual studio 로 debug 빌드와 release 빌드를 사용해서 확인할 수 있게 하고, 같은 프로젝트에서 debug 빌드시 _Debug 옵션을 통해 tc 가 자동 수행될 수 있게 한다.
+clean code 와 oop 개념을 적극 적용해서 작성한다.
+코드 생성시 유니코드(서명 있는 UTF-8) - 코드 페이지 65001 이 형태로 만들어서 한글에 문제가 없게 한다.
 
 ## 목적
 

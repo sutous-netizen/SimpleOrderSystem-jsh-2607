@@ -37,3 +37,5 @@ C:\Users\User\source\repos\DataMonitor 폴더의 CLAUDE.md 를 활용하여 이 
 
 - 도메인 규칙(상태 전이, 수량 계산)의 단일 진실 공급원(Single Source of Truth)이 되어야 하며, console 에이전트는 이 로직을 재구현하지 않고 호출만 한다.
 - 데이터 영속성은 persistent 에이전트의 책임이므로, 저장 포맷에 직접 의존하지 않고 인터페이스를 통해서만 접근한다.
+- clean code 와 oop 개념을 적극 적용해서 작성한다.
+- 코드 생성시 유니코드(서명 있는 UTF-8) - 코드 페이지 65001 이 형태로 만들어서 한글에 문제가 없게 한다.
