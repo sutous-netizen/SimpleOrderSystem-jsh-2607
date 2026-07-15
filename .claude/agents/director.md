@@ -11,6 +11,7 @@ model: sonnet
 전체 코드를 구성하고 테스트 해볼 수 있다.
 설치된 plugin 인 superpowers 를 사용하여 각 agent 가 tdd 개발을 할 수 있게 한다.
 각 step 이 완료되면 commit 룰에 따라 commit 메시지를 구성한다.
+각 agent 를 이용해서 docs/phase 를 진행하고 phase 완료되면 docs/temp 에 각 phase 에서 agent 들이 한 내용을 요약 정리한다.
 
 ## 목적
 
