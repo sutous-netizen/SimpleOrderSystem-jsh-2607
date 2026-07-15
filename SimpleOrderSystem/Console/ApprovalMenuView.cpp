@@ -9,13 +9,6 @@ namespace Console {
 ApprovalMenuView::ApprovalMenuView(Persistence::IDataStore& store, Monitor::OrderService& orderService)
     : store_(store), orderService_(orderService) {}
 
-namespace {
-std::string SampleNameOf(Persistence::IDataStore& store, const std::string& sampleId) {
-    const auto sampleOpt = store.FindSampleById(sampleId);
-    return sampleOpt.has_value() ? sampleOpt->name : sampleId;
-}
-} // namespace
-
 void ApprovalMenuView::Run() {
     std::cout << "\n[3] 주문 승인/거절\n\n";
 

@@ -54,6 +54,15 @@ struct JsonValue {
         return v;
     }
 
+    // Object 빌더 편의 함수: 필드 하나를 순서대로 추가한다.
+    // (ToJson 계열 함수들에서 반복되던 emplace_back(key, MakeXxx(value)) 패턴을 단순화한다.)
+    void AddString(std::string key, std::string value) {
+        objectValue.emplace_back(std::move(key), MakeString(std::move(value)));
+    }
+    void AddNumber(std::string key, double value) {
+        objectValue.emplace_back(std::move(key), MakeNumber(value));
+    }
+
     const JsonValue* Find(const std::string& key) const {
         if (type != JsonType::Object) return nullptr;
         for (const auto& kv : objectValue) {
@@ -310,25 +319,46 @@ void WriteFileTextAtomic(const std::string& path, const std::string& content) {
     }
 }
 
+// obj에서 key를 찾아 defaultValue를 기본값으로 문자열/정수/실수를 꺼낸다.
+// SampleFromJson/OrderFromJson 전반에서 반복되던
+// "if (auto* v = obj.Find(key)) x = v->AsXxx(default);" 패턴을 공통 헬퍼로 추출한 것이다.
+std::string GetString(const JsonValue& obj, const std::string& key, const std::string& defaultValue = "") {
+    if (const JsonValue* v = obj.Find(key)) return v->AsString(defaultValue);
+    return defaultValue;
+}
+
+int64_t GetInt64(const JsonValue& obj, const std::string& key, int64_t defaultValue = 0) {
+    if (const JsonValue* v = obj.Find(key)) return v->AsInt64(defaultValue);
+    return defaultValue;
+}
+
+double GetDouble(const JsonValue& obj, const std::string& key, double defaultValue = 0.0) {
+    if (const JsonValue* v = obj.Find(key)) return v->AsDouble(defaultValue);
+    return defaultValue;
+}
+
+// 기본 주문 상태 문자열(파일에 status 필드가 없는 경우 사용).
+constexpr const char* kDefaultOrderStatus = "RESERVED";
+
 // ---- Sample <-> JSON ----
 
 JsonValue SampleToJson(const Model::Sample& s) {
     JsonValue obj = JsonValue::MakeObject();
-    obj.objectValue.emplace_back("id", JsonValue::MakeString(s.id));
-    obj.objectValue.emplace_back("name", JsonValue::MakeString(s.name));
-    obj.objectValue.emplace_back("avgProductionTimeMin", JsonValue::MakeNumber(s.avgProductionTimeMin));
-    obj.objectValue.emplace_back("yieldRate", JsonValue::MakeNumber(s.yieldRate));
-    obj.objectValue.emplace_back("stock", JsonValue::MakeNumber(static_cast<double>(s.stock)));
+    obj.AddString("id", s.id);
+    obj.AddString("name", s.name);
+    obj.AddNumber("avgProductionTimeMin", s.avgProductionTimeMin);
+    obj.AddNumber("yieldRate", s.yieldRate);
+    obj.AddNumber("stock", static_cast<double>(s.stock));
     return obj;
 }
 
 Model::Sample SampleFromJson(const JsonValue& obj) {
     Model::Sample s;
-    if (auto* v = obj.Find("id")) s.id = v->AsString();
-    if (auto* v = obj.Find("name")) s.name = v->AsString();
-    if (auto* v = obj.Find("avgProductionTimeMin")) s.avgProductionTimeMin = v->AsDouble();
-    if (auto* v = obj.Find("yieldRate")) s.yieldRate = v->AsDouble(1.0);
-    if (auto* v = obj.Find("stock")) s.stock = v->AsInt64();
+    s.id = GetString(obj, "id");
+    s.name = GetString(obj, "name");
+    s.avgProductionTimeMin = GetDouble(obj, "avgProductionTimeMin");
+    s.yieldRate = GetDouble(obj, "yieldRate", 1.0);
+    s.stock = GetInt64(obj, "stock");
     return s;
 }
 
@@ -336,32 +366,47 @@ Model::Sample SampleFromJson(const JsonValue& obj) {
 
 JsonValue OrderToJson(const Model::Order& o) {
     JsonValue obj = JsonValue::MakeObject();
-    obj.objectValue.emplace_back("orderNo", JsonValue::MakeString(o.orderNo));
-    obj.objectValue.emplace_back("sampleId", JsonValue::MakeString(o.sampleId));
-    obj.objectValue.emplace_back("customerName", JsonValue::MakeString(o.customerName));
-    obj.objectValue.emplace_back("quantity", JsonValue::MakeNumber(static_cast<double>(o.quantity)));
-    obj.objectValue.emplace_back("status", JsonValue::MakeString(Model::ToString(o.status)));
-    obj.objectValue.emplace_back("createdAt", JsonValue::MakeString(o.createdAt));
-    obj.objectValue.emplace_back("updatedAt", JsonValue::MakeString(o.updatedAt));
-    obj.objectValue.emplace_back("shortage", JsonValue::MakeNumber(static_cast<double>(o.shortage)));
-    obj.objectValue.emplace_back("actualProductionQty", JsonValue::MakeNumber(static_cast<double>(o.actualProductionQty)));
-    obj.objectValue.emplace_back("totalProductionTimeMin", JsonValue::MakeNumber(o.totalProductionTimeMin));
+    obj.AddString("orderNo", o.orderNo);
+    obj.AddString("sampleId", o.sampleId);
+    obj.AddString("customerName", o.customerName);
+    obj.AddNumber("quantity", static_cast<double>(o.quantity));
+    obj.AddString("status", Model::ToString(o.status));
+    obj.AddString("createdAt", o.createdAt);
+    obj.AddString("updatedAt", o.updatedAt);
+    obj.AddNumber("shortage", static_cast<double>(o.shortage));
+    obj.AddNumber("actualProductionQty", static_cast<double>(o.actualProductionQty));
+    obj.AddNumber("totalProductionTimeMin", o.totalProductionTimeMin);
     return obj;
 }
 
 Model::Order OrderFromJson(const JsonValue& obj) {
     Model::Order o;
-    if (auto* v = obj.Find("orderNo")) o.orderNo = v->AsString();
-    if (auto* v = obj.Find("sampleId")) o.sampleId = v->AsString();
-    if (auto* v = obj.Find("customerName")) o.customerName = v->AsString();
-    if (auto* v = obj.Find("quantity")) o.quantity = v->AsInt64();
-    if (auto* v = obj.Find("status")) o.status = Model::OrderStatusFromString(v->AsString("RESERVED"));
-    if (auto* v = obj.Find("createdAt")) o.createdAt = v->AsString();
-    if (auto* v = obj.Find("updatedAt")) o.updatedAt = v->AsString();
-    if (auto* v = obj.Find("shortage")) o.shortage = v->AsInt64();
-    if (auto* v = obj.Find("actualProductionQty")) o.actualProductionQty = v->AsInt64();
-    if (auto* v = obj.Find("totalProductionTimeMin")) o.totalProductionTimeMin = v->AsDouble();
+    o.orderNo = GetString(obj, "orderNo");
+    o.sampleId = GetString(obj, "sampleId");
+    o.customerName = GetString(obj, "customerName");
+    o.quantity = GetInt64(obj, "quantity");
+    o.status = Model::OrderStatusFromString(GetString(obj, "status", kDefaultOrderStatus));
+    o.createdAt = GetString(obj, "createdAt");
+    o.updatedAt = GetString(obj, "updatedAt");
+    o.shortage = GetInt64(obj, "shortage");
+    o.actualProductionQty = GetInt64(obj, "actualProductionQty");
+    o.totalProductionTimeMin = GetDouble(obj, "totalProductionTimeMin");
     return o;
+}
+
+// double 왕복 변환 시 손실이 없도록 사용하는 소수점 출력 정밀도(IEEE-754 double의
+// 유효 자릿수 상한인 17자리 - https://en.wikipedia.org/wiki/IEEE_754 참고).
+constexpr int kDoubleRoundTripPrecision = 17;
+
+// JSON 숫자 값을 문자열로 포맷한다. 정수 값은 정수로, 소수는 정밀도를 살려 출력한다.
+std::string FormatJsonNumber(double d) {
+    if (d == static_cast<int64_t>(d)) {
+        return std::to_string(static_cast<int64_t>(d));
+    }
+    std::ostringstream numOss;
+    numOss.precision(kDoubleRoundTripPrecision);
+    numOss << d;
+    return numOss.str();
 }
 
 // JsonValue(Object) -> 한 줄 문자열. 배열 안에서 들여쓰기해 사용.
@@ -376,19 +421,9 @@ std::string WriteObjectLine(const JsonValue& obj, const std::string& indent) {
             case JsonType::String:
                 oss << "\"" << EscapeJsonString(v.stringValue) << "\"";
                 break;
-            case JsonType::Number: {
-                // 정수 값은 정수로, 소수는 왕복 손실이 없도록 충분한 정밀도로 출력한다.
-                double d = v.numberValue;
-                if (d == static_cast<int64_t>(d)) {
-                    oss << static_cast<int64_t>(d);
-                } else {
-                    std::ostringstream numOss;
-                    numOss.precision(17);
-                    numOss << d;
-                    oss << numOss.str();
-                }
+            case JsonType::Number:
+                oss << FormatJsonNumber(v.numberValue);
                 break;
-            }
             case JsonType::Bool:
                 oss << (v.boolValue ? "true" : "false");
                 break;
@@ -402,11 +437,14 @@ std::string WriteObjectLine(const JsonValue& obj, const std::string& indent) {
     return oss.str();
 }
 
+// 배열 안 객체 한 줄의 들여쓰기(공백 2칸).
+const std::string kArrayItemIndent = "  ";
+
 std::string WriteArrayOfObjects(const std::vector<JsonValue>& objects) {
     std::ostringstream oss;
     oss << "[\n";
     for (size_t i = 0; i < objects.size(); ++i) {
-        oss << WriteObjectLine(objects[i], "  ");
+        oss << WriteObjectLine(objects[i], kArrayItemIndent);
         if (i + 1 < objects.size()) oss << ",";
         oss << "\n";
     }
@@ -429,11 +467,14 @@ JsonArray LoadJsonArrayFromFile(const std::string& path) {
     return root.arrayValue;
 }
 
+// 주문번호 형식: "ORD-YYYYMMDD-NNNN"
+constexpr size_t kOrderNoPrefixLength = 4;  // "ORD-"
+constexpr size_t kOrderNoDateLength = 8;    // "YYYYMMDD"
+constexpr int kOrderNoSeqWidth = 4;         // "NNNN"
+
 std::string ExtractDateFromOrderNo(const std::string& orderNo) {
-    // 형식: ORD-YYYYMMDD-NNNN
-    // "ORD-" (4자) 다음 8자가 날짜
-    if (orderNo.size() < 4 + 8) return "";
-    return orderNo.substr(4, 8);
+    if (orderNo.size() < kOrderNoPrefixLength + kOrderNoDateLength) return "";
+    return orderNo.substr(kOrderNoPrefixLength, kOrderNoDateLength);
 }
 
 int ExtractSeqFromOrderNo(const std::string& orderNo) {
@@ -518,7 +559,7 @@ std::string JsonDataStore::NextOrderNo(const std::string& yyyymmdd) {
     int nextSeq = maxSeq + 1;
     std::ostringstream oss;
     oss << "ORD-" << yyyymmdd << "-";
-    oss.width(4);
+    oss.width(kOrderNoSeqWidth);
     oss.fill('0');
     oss << nextSeq;
     return oss.str();

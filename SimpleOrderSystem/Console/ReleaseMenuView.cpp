@@ -9,13 +9,6 @@ namespace Console {
 ReleaseMenuView::ReleaseMenuView(Persistence::IDataStore& store, Monitor::OrderService& orderService)
     : store_(store), orderService_(orderService) {}
 
-namespace {
-std::string SampleNameOf(Persistence::IDataStore& store, const std::string& sampleId) {
-    const auto sampleOpt = store.FindSampleById(sampleId);
-    return sampleOpt.has_value() ? sampleOpt->name : sampleId;
-}
-} // namespace
-
 void ReleaseMenuView::Run() {
     std::cout << "\n[6] 출고 처리\n\n";
 

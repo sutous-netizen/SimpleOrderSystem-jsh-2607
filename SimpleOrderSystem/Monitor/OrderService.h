@@ -60,6 +60,16 @@ private:
     // 단일 라인 누적 스케줄(cumulativeStart = max(이전 완료, 큐잉 시각), completion = start + 총생산시간)을 계산한다.
     std::vector<ScheduledProduction> BuildProductionSchedule() const;
 
+    // 주문번호로 주문을 찾아 그 반복자를 반환한다. 존재하지 않으면 invalid_argument 예외를 던진다.
+    // ApproveOrder/RejectOrder/ReleaseOrder에서 반복되는 "찾기 + 없으면 예외" 패턴을 공유한다.
+    static std::vector<Model::Order>::iterator FindOrderOrThrow(std::vector<Model::Order>& orders, const std::string& orderNo);
+
+    // 시료 ID로 시료를 조회한다. 존재하지 않으면 invalid_argument 예외를 던진다.
+    Model::Sample FindSampleOrThrow(const std::string& sampleId) const;
+
+    // 주문 상태가 기대한 상태와 다르면 logic_error 예외를 던진다.
+    static void RequireStatus(const Model::Order& order, Model::OrderStatus expected, const std::string& errorMessage);
+
     Persistence::IDataStore& store_;
 };
 

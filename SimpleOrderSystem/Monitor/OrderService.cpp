@@ -12,21 +12,10 @@ namespace Monitor {
 
 namespace {
 
-// "YYYY-MM-DD HH:MM:SS" 형식의 로컬 표준 타임스탬프 문자열.
-std::string FormatTime(std::time_t t) {
-    std::tm tmv{};
-#if defined(_WIN32)
-    localtime_s(&tmv, &t);
-#else
-    localtime_r(&t, &tmv);
-#endif
-    std::ostringstream oss;
-    oss << std::put_time(&tmv, "%Y-%m-%d %H:%M:%S");
-    return oss.str();
-}
-
 std::string NowString() {
-    return FormatTime(std::time(nullptr));
+    // "YYYY-MM-DD HH:MM:SS" 포맷은 Console 계층(NowTimeString)과 공유하므로
+    // Model::FormatLocalTimestamp에 위임한다(계층 간 중복 구현 방지).
+    return Model::FormatLocalTimestamp(std::time(nullptr));
 }
 
 std::string TodayYyyymmdd() {
@@ -73,13 +62,32 @@ int64_t CeilDivide(int64_t numerator, double rate) {
 
 } // namespace
 
+std::vector<Model::Order>::iterator OrderService::FindOrderOrThrow(std::vector<Model::Order>& orders, const std::string& orderNo) {
+    auto it = std::find_if(orders.begin(), orders.end(), [&](const Model::Order& o) { return o.orderNo == orderNo; });
+    if (it == orders.end()) {
+        throw std::invalid_argument("존재하지 않는 주문번호: " + orderNo);
+    }
+    return it;
+}
+
+Model::Sample OrderService::FindSampleOrThrow(const std::string& sampleId) const {
+    auto sampleOpt = store_.FindSampleById(sampleId);
+    if (!sampleOpt.has_value()) {
+        throw std::invalid_argument("존재하지 않는 시료 ID: " + sampleId);
+    }
+    return sampleOpt.value();
+}
+
+void OrderService::RequireStatus(const Model::Order& order, Model::OrderStatus expected, const std::string& errorMessage) {
+    if (order.status != expected) {
+        throw std::logic_error(errorMessage);
+    }
+}
+
 OrderService::OrderService(Persistence::IDataStore& store) : store_(store) {}
 
 Model::Order OrderService::PlaceOrder(const std::string& sampleId, const std::string& customerName, int64_t quantity) {
-    auto sample = store_.FindSampleById(sampleId);
-    if (!sample.has_value()) {
-        throw std::invalid_argument("존재하지 않는 시료 ID: " + sampleId);
-    }
+    FindSampleOrThrow(sampleId); // 존재 여부만 확인(값은 이후 로직에서 사용하지 않음)
     if (quantity <= 0) {
         throw std::invalid_argument("주문 수량은 0보다 커야 합니다.");
     }
@@ -112,27 +120,18 @@ std::vector<Model::Order> OrderService::GetPendingOrders() const {
 
 Model::Order OrderService::ApproveOrder(const std::string& orderNo) {
     auto orders = store_.LoadOrders();
-    auto it = std::find_if(orders.begin(), orders.end(), [&](const Model::Order& o) { return o.orderNo == orderNo; });
-    if (it == orders.end()) {
-        throw std::invalid_argument("존재하지 않는 주문번호: " + orderNo);
-    }
-    if (it->status != Model::OrderStatus::RESERVED) {
-        throw std::logic_error("RESERVED 상태의 주문만 승인할 수 있습니다: " + orderNo);
-    }
+    auto it = FindOrderOrThrow(orders, orderNo);
+    RequireStatus(*it, Model::OrderStatus::RESERVED, "RESERVED 상태의 주문만 승인할 수 있습니다: " + orderNo);
 
-    auto sampleOpt = store_.FindSampleById(it->sampleId);
-    if (!sampleOpt.has_value()) {
-        throw std::invalid_argument("존재하지 않는 시료 ID: " + it->sampleId);
-    }
-    Model::Sample sample = sampleOpt.value();
+    Model::Sample sample = FindSampleOrThrow(it->sampleId);
 
-    const std::string now = NowString();
+    // 두 분기(CONFIRMED/PRODUCING) 모두 공통으로 갱신되는 값.
+    it->updatedAt = NowString(); // CONFIRMED 확정 시각 또는 생산 큐 등록(=큐잉) 시각
 
     if (sample.stock >= it->quantity) {
         // 재고 충분 -> 즉시 CONFIRMED, 이중 배정 방지 위해 재고 차감
         sample.stock -= it->quantity;
         it->status = Model::OrderStatus::CONFIRMED;
-        it->updatedAt = now;
         it->shortage = 0;
         it->actualProductionQty = 0;
         it->totalProductionTimeMin = 0.0;
@@ -143,7 +142,6 @@ Model::Order OrderService::ApproveOrder(const std::string& orderNo) {
         double totalProductionTimeMin = sample.avgProductionTimeMin * static_cast<double>(actualProductionQty);
 
         it->status = Model::OrderStatus::PRODUCING;
-        it->updatedAt = now; // 생산 큐 등록(=큐잉) 시각
         it->shortage = shortage;
         it->actualProductionQty = actualProductionQty;
         it->totalProductionTimeMin = totalProductionTimeMin;
@@ -168,13 +166,8 @@ Model::Order OrderService::ApproveOrder(const std::string& orderNo) {
 
 Model::Order OrderService::RejectOrder(const std::string& orderNo) {
     auto orders = store_.LoadOrders();
-    auto it = std::find_if(orders.begin(), orders.end(), [&](const Model::Order& o) { return o.orderNo == orderNo; });
-    if (it == orders.end()) {
-        throw std::invalid_argument("존재하지 않는 주문번호: " + orderNo);
-    }
-    if (it->status != Model::OrderStatus::RESERVED) {
-        throw std::logic_error("RESERVED 상태의 주문만 거절할 수 있습니다: " + orderNo);
-    }
+    auto it = FindOrderOrThrow(orders, orderNo);
+    RequireStatus(*it, Model::OrderStatus::RESERVED, "RESERVED 상태의 주문만 거절할 수 있습니다: " + orderNo);
 
     it->status = Model::OrderStatus::REJECTED;
     it->updatedAt = NowString();
@@ -186,13 +179,8 @@ Model::Order OrderService::RejectOrder(const std::string& orderNo) {
 
 Model::Order OrderService::ReleaseOrder(const std::string& orderNo) {
     auto orders = store_.LoadOrders();
-    auto it = std::find_if(orders.begin(), orders.end(), [&](const Model::Order& o) { return o.orderNo == orderNo; });
-    if (it == orders.end()) {
-        throw std::invalid_argument("존재하지 않는 주문번호: " + orderNo);
-    }
-    if (it->status != Model::OrderStatus::CONFIRMED) {
-        throw std::logic_error("CONFIRMED 상태의 주문만 출고할 수 있습니다: " + orderNo);
-    }
+    auto it = FindOrderOrThrow(orders, orderNo);
+    RequireStatus(*it, Model::OrderStatus::CONFIRMED, "CONFIRMED 상태의 주문만 출고할 수 있습니다: " + orderNo);
 
     it->status = Model::OrderStatus::RELEASE;
     it->updatedAt = NowString();
@@ -338,7 +326,7 @@ std::vector<ProductionQueueItem> OrderService::GetProductionQueue() const {
         item.sample = sample;
         item.elapsedMinutes = elapsedMinutes;
         item.progressPercent = progressPercent;
-        item.estimatedCompletionAt = FormatTime(entry.finishTime);
+        item.estimatedCompletionAt = Model::FormatLocalTimestamp(entry.finishTime);
         result.push_back(std::move(item));
     }
 
@@ -386,7 +374,7 @@ void OrderService::CatchUpProduction() {
         }
 
         oIt->status = Model::OrderStatus::CONFIRMED;
-        oIt->updatedAt = FormatTime(entry.finishTime);
+        oIt->updatedAt = Model::FormatLocalTimestamp(entry.finishTime);
         ordersChanged = true;
     }
 

@@ -5,8 +5,15 @@
 
 #include <string>
 #include <cstdint>
+#include <ctime>
 
 namespace Model {
+
+// "YYYY-MM-DD HH:MM:SS" 형식의 로컬 타임스탬프 문자열로 변환한다.
+// Order.createdAt/updatedAt 등 프로젝트 전역에서 공유하는 정규 시각 포맷이며,
+// Monitor(도메인 스케줄링)와 Console(화면 표시) 양쪽에서 공용으로 사용한다
+// (동일한 포맷 로직이 계층별로 중복 구현되지 않도록 Model에 둔다).
+std::string FormatLocalTimestamp(std::time_t t);
 
 // 주문 상태 흐름: RESERVED -> (REJECTED | CONFIRMED | PRODUCING) -> CONFIRMED -> RELEASE
 // REJECTED 는 정상 흐름 밖의 상태이며 모니터링에서 제외한다.

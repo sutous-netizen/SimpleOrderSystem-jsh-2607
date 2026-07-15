@@ -29,6 +29,46 @@ double RandomDouble(double lo, double hi) {
     return dist(Rng());
 }
 
+// ---- 시료 속성 값 범위 ----
+constexpr double kAvgProductionTimeMinLow = 0.2;
+constexpr double kAvgProductionTimeMinHigh = 1.0;
+constexpr double kYieldRateLow = 0.7;
+constexpr double kYieldRateHigh = 0.99;
+
+// ---- 초기 재고 범위(고갈/부족/여유) ----
+constexpr int64_t kDepletedStock = 0;
+constexpr int kShortageStockLow = 1;
+constexpr int kShortageStockHigh = 20;
+constexpr int kAmpleStockLow = 200;
+constexpr int kAmpleStockHigh = 1000;
+
+// ---- 주문 수량 범위 ----
+constexpr int kBasicOrderQuantityLow = 5;   // RESERVED/REJECTED 주문 수량
+constexpr int kBasicOrderQuantityHigh = 80;
+constexpr int kProducingExtraQuantityLow = 5;   // 재고 부족을 재현하기 위한 초과분
+constexpr int kProducingExtraQuantityHigh = 60;
+constexpr int kStockLimitedQuantityCap = 80;   // CONFIRMED/RELEASE에서 재고가 있을 때의 상한
+constexpr int kNoStockQuantityLow = 1;         // CONFIRMED/RELEASE에서 재고가 없을 때의 범위
+constexpr int kNoStockQuantityHigh = 10;
+
+// ---- 생성 시각 경과(offset) 범위(분 단위) ----
+constexpr int kDefaultOffsetMinLow = 5;      // RESERVED/REJECTED/CONFIRMED/RELEASE 생성 시각
+constexpr int kDefaultOffsetMinHigh = 1440;
+constexpr int kProducingRecentOffsetMinLow = 1;    // 방금 승인되어 아직 생산 중일 가능성이 높은 케이스
+constexpr int kProducingRecentOffsetMinHigh = 20;
+constexpr int kProducingOldOffsetMinLow = 600;     // 오래 전에 승인되어 이미 생산이 끝났을 가능성이 높은 케이스
+constexpr int kProducingOldOffsetMinHigh = 3000;
+
+// ---- 상태 갱신(updatedAt) 지연 범위(분 단위) ----
+constexpr int kRejectedUpdateDelayMinLow = 1;
+constexpr int kRejectedUpdateDelayMinHigh = 30;
+constexpr int kProducingUpdateDelayMinLow = 1;
+constexpr int kProducingUpdateDelayMinHigh = 10;
+constexpr int kConfirmedUpdateDelayMinLow = 1;
+constexpr int kConfirmedUpdateDelayMinHigh = 30;
+constexpr int kReleaseUpdateDelayMinLow = 30;
+constexpr int kReleaseUpdateDelayMinHigh = 120;
+
 // ---- 시료 이름 조합 풀 ----
 const std::vector<std::string>& NamePrefixes() {
     static const std::vector<std::string> prefixes = {
@@ -104,10 +144,18 @@ std::string MakeSampleId(int index) {
 // category 0: 고갈(0), 1: 부족(소량), 2: 여유(대량)
 int64_t RandomStockForCategory(int category) {
     switch (category % 3) {
-        case 0: return 0;                          // 고갈
-        case 1: return RandomInt(1, 20);            // 부족
-        default: return RandomInt(200, 1000);       // 여유
+        case 0: return kDepletedStock;                                    // 고갈
+        case 1: return RandomInt(kShortageStockLow, kShortageStockHigh);  // 부족
+        default: return RandomInt(kAmpleStockLow, kAmpleStockHigh);       // 여유
     }
+}
+
+// CONFIRMED/RELEASE 주문 수량: 재고가 있으면 그 범위 내에서, 없으면 소량으로 생성한다.
+int64_t RandomQuantityWithinStock(int64_t stock) {
+    if (stock > 0) {
+        return RandomInt(1, static_cast<int>(std::min<int64_t>(stock, kStockLimitedQuantityCap)));
+    }
+    return RandomInt(kNoStockQuantityLow, kNoStockQuantityHigh);
 }
 
 } // namespace
@@ -130,8 +178,8 @@ void DummyDataGenerator::GenerateSamples(int count, bool reset) {
         Model::Sample sample;
         sample.id = MakeSampleId(startIndex + i);
         sample.name = RandomSampleName();
-        sample.avgProductionTimeMin = RandomDouble(0.2, 1.0);
-        sample.yieldRate = RandomDouble(0.7, 0.99);
+        sample.avgProductionTimeMin = RandomDouble(kAvgProductionTimeMinLow, kAvgProductionTimeMinHigh);
+        sample.yieldRate = RandomDouble(kYieldRateLow, kYieldRateHigh);
         sample.stock = RandomStockForCategory(i);
         samples.push_back(sample);
     }
@@ -174,10 +222,12 @@ void DummyDataGenerator::GenerateOrders(int countPerStatus, bool reset) {
                 case Model::OrderStatus::PRODUCING:
                     // 짝수 index: 방금 승인되어 아직 생산 중일 가능성이 높은 케이스.
                     // 홀수 index: 오래 전에 승인되어 이미 생산이 끝났을 가능성이 높은 케이스.
-                    offsetMinutes = (i % 2 == 0) ? RandomInt(1, 20) : RandomInt(600, 3000);
+                    offsetMinutes = (i % 2 == 0)
+                        ? RandomInt(kProducingRecentOffsetMinLow, kProducingRecentOffsetMinHigh)
+                        : RandomInt(kProducingOldOffsetMinLow, kProducingOldOffsetMinHigh);
                     break;
                 default:
-                    offsetMinutes = RandomInt(5, 1440);
+                    offsetMinutes = RandomInt(kDefaultOffsetMinLow, kDefaultOffsetMinHigh);
                     break;
             }
 
@@ -194,42 +244,42 @@ void DummyDataGenerator::GenerateOrders(int countPerStatus, bool reset) {
 
             switch (status) {
                 case Model::OrderStatus::RESERVED: {
-                    order.quantity = RandomInt(5, 80);
+                    order.quantity = RandomInt(kBasicOrderQuantityLow, kBasicOrderQuantityHigh);
                     order.updatedAt = createdAt; // 아직 승인/거절 전
                     break;
                 }
                 case Model::OrderStatus::REJECTED: {
-                    order.quantity = RandomInt(5, 80);
-                    const auto updatedTime = createdTime + std::chrono::minutes(RandomInt(1, 30));
+                    order.quantity = RandomInt(kBasicOrderQuantityLow, kBasicOrderQuantityHigh);
+                    const auto updatedTime = createdTime + std::chrono::minutes(
+                        RandomInt(kRejectedUpdateDelayMinLow, kRejectedUpdateDelayMinHigh));
                     order.updatedAt = FormatDateTime(std::min(updatedTime, now));
                     break;
                 }
                 case Model::OrderStatus::PRODUCING: {
                     // 재고 부족 상황을 재현하기 위해 재고보다 많은 수량으로 주문한다.
-                    const int64_t extra = RandomInt(5, 60);
+                    const int64_t extra = RandomInt(kProducingExtraQuantityLow, kProducingExtraQuantityHigh);
                     order.quantity = sample.stock + extra;
                     order.shortage = order.quantity - sample.stock;
                     order.actualProductionQty = static_cast<int64_t>(
                         std::ceil(static_cast<double>(order.shortage) / sample.yieldRate));
                     order.totalProductionTimeMin = sample.avgProductionTimeMin * static_cast<double>(order.actualProductionQty);
 
-                    const auto updatedTime = createdTime + std::chrono::minutes(RandomInt(1, 10));
+                    const auto updatedTime = createdTime + std::chrono::minutes(
+                        RandomInt(kProducingUpdateDelayMinLow, kProducingUpdateDelayMinHigh));
                     order.updatedAt = FormatDateTime(std::min(updatedTime, now));
                     break;
                 }
                 case Model::OrderStatus::CONFIRMED: {
-                    order.quantity = (sample.stock > 0)
-                        ? RandomInt(1, static_cast<int>(std::min<int64_t>(sample.stock, 80)))
-                        : RandomInt(1, 10);
-                    const auto updatedTime = createdTime + std::chrono::minutes(RandomInt(1, 30));
+                    order.quantity = RandomQuantityWithinStock(sample.stock);
+                    const auto updatedTime = createdTime + std::chrono::minutes(
+                        RandomInt(kConfirmedUpdateDelayMinLow, kConfirmedUpdateDelayMinHigh));
                     order.updatedAt = FormatDateTime(std::min(updatedTime, now));
                     break;
                 }
                 case Model::OrderStatus::RELEASE: {
-                    order.quantity = (sample.stock > 0)
-                        ? RandomInt(1, static_cast<int>(std::min<int64_t>(sample.stock, 80)))
-                        : RandomInt(1, 10);
-                    const auto updatedTime = createdTime + std::chrono::minutes(RandomInt(30, 120));
+                    order.quantity = RandomQuantityWithinStock(sample.stock);
+                    const auto updatedTime = createdTime + std::chrono::minutes(
+                        RandomInt(kReleaseUpdateDelayMinLow, kReleaseUpdateDelayMinHigh));
                     order.updatedAt = FormatDateTime(std::min(updatedTime, now));
                     break;
                 }

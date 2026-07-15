@@ -1,4 +1,5 @@
 ﻿#include "ConsoleUtil.h"
+#include "../Model/Types.h"
 
 #include <chrono>
 #include <ctime>
@@ -32,12 +33,9 @@ std::tm LocalNow() {
 } // namespace
 
 std::string NowTimeString() {
-    const std::tm tmValue = LocalNow();
-    char buffer[32];
-    std::snprintf(buffer, sizeof(buffer), "%04d-%02d-%02d %02d:%02d:%02d",
-        tmValue.tm_year + 1900, tmValue.tm_mon + 1, tmValue.tm_mday,
-        tmValue.tm_hour, tmValue.tm_min, tmValue.tm_sec);
-    return buffer;
+    // "YYYY-MM-DD HH:MM:SS" 포맷은 Monitor 계층(OrderService)과 공유하므로
+    // Model::FormatLocalTimestamp에 위임한다(계층 간 중복 구현 방지).
+    return Model::FormatLocalTimestamp(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
 }
 
 std::string NowDateCompact() {
@@ -151,6 +149,11 @@ std::string PadDisplayWidth(const std::string& text, int targetWidth) {
         return text;
     }
     return text + std::string(static_cast<size_t>(targetWidth - width), ' ');
+}
+
+std::string SampleNameOf(Persistence::IDataStore& store, const std::string& sampleId) {
+    const auto sampleOpt = store.FindSampleById(sampleId);
+    return sampleOpt.has_value() ? sampleOpt->name : sampleId;
 }
 
 } // namespace Console

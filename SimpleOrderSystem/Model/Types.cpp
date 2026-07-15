@@ -1,8 +1,23 @@
 ﻿#include "Types.h"
+#include <cstdio>
 #include <stdexcept>
 #include <unordered_map>
 
 namespace Model {
+
+std::string FormatLocalTimestamp(std::time_t t) {
+    std::tm tmv{};
+#if defined(_WIN32)
+    localtime_s(&tmv, &t);
+#else
+    localtime_r(&t, &tmv);
+#endif
+    char buffer[32];
+    std::snprintf(buffer, sizeof(buffer), "%04d-%02d-%02d %02d:%02d:%02d",
+        tmv.tm_year + 1900, tmv.tm_mon + 1, tmv.tm_mday,
+        tmv.tm_hour, tmv.tm_min, tmv.tm_sec);
+    return buffer;
+}
 
 const std::string& ToString(OrderStatus status) {
     static const std::string kReserved = "RESERVED";

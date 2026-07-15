@@ -4,6 +4,8 @@
 
 #include <string>
 
+#include "../Persistence/IDataStore.h"
+
 namespace Console {
 
 // 앞뒤 공백 제거
@@ -41,5 +43,9 @@ bool ReadYesNo(const std::string& prompt);
 //   - 그 외(멀티바이트 시퀀스의 시작 바이트, 한글 등) = 화면 폭 2로 근사
 // 문자열의 화면 폭이 이미 targetWidth 이상이면 자르지 않고 그대로 반환한다.
 std::string PadDisplayWidth(const std::string& text, int targetWidth);
+
+// 시료 ID로 저장소에서 시료명을 조회한다. 시료가 존재하지 않으면 sampleId 자체를 반환한다
+// (승인/거절, 출고 처리 화면 등 여러 View가 공유하는 조회 헬퍼).
+std::string SampleNameOf(Persistence::IDataStore& store, const std::string& sampleId);
 
 } // namespace Console
