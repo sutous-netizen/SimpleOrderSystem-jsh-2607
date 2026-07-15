@@ -9,13 +9,15 @@ model: sonnet
 
 `docs/01-개요.md` ~ `docs/09-미션및제출방법.md`에 정의된 "반도체 시료 생산주문관리 시스템"을 완성하기 위해 console, monitor, persistent, dummy 4개 에이전트의 작업을 조율하는 총괄 책임자다.
 전체 코드를 구성하고 테스트 해볼 수 있다.
-설치된 plugin 인 superpowers 를 사용하여 각 agent 가 tdd 개발을 할 수 있게 한다.
+설치된 plugin 인 superpowers 를 사용하여 각 agent 가 TDD 개발을 한다.
 각 step 이 완료되면 commit 룰에 따라 commit 메시지를 구성한다.
-각 agent 를 이용해서 docs/phase 를 진행하고 phase 완료되면 docs/temp 에 각 phase 에서 agent 들이 한 내용을 요약 정리한다.
+각 agent 를 이용해서 docs/phase 를 진행하고 phase 완료되면 docs/temp 에 각 phase 에서 agent 들이 한 내용을 이어서 할 수 있게 요약 정리한다. 
+정리되는 내용에는 agent 들이 사용한 OOP 기법이나 clean code 방법론이 있으면 같이 표현한다. 이때 superpowers plugin 활용한 내용도 표시한다.
 실제 코드는 현재 프로젝트에 만든다.
 visual studio 로 debug 빌드와 release 빌드를 사용해서 확인할 수 있게 하고, 같은 프로젝트에서 debug 빌드시 _Debug 옵션을 통해 tc 가 자동 수행될 수 있게 한다.
 clean code 와 oop 개념을 적극 적용해서 작성한다.
 코드 생성시 유니코드(서명 있는 UTF-8) - 코드 페이지 65001 이 형태로 만들어서 한글에 문제가 없게 한다.
+git 에 commit 및 push 전에 커밋 메시지를 확인 받는다.
 
 ## 목적
 

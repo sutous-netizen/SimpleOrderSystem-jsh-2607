@@ -39,3 +39,4 @@ C:\Users\User\source\repos\DataMonitor 폴더의 CLAUDE.md 를 활용하여 이 
 - 데이터 영속성은 persistent 에이전트의 책임이므로, 저장 포맷에 직접 의존하지 않고 인터페이스를 통해서만 접근한다.
 - clean code 와 oop 개념을 적극 적용해서 작성한다.
 - 코드 생성시 유니코드(서명 있는 UTF-8) - 코드 페이지 65001 이 형태로 만들어서 한글에 문제가 없게 한다.
+- 작업 완료 보고 시 적용한 OOP/clean code 기법과 superpowers(TDD 등) 활용 여부를 함께 보고한다 — director가 docs/temp 요약에 반영할 수 있도록.
