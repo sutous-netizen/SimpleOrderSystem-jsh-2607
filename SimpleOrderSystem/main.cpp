@@ -16,7 +16,22 @@
 #include <filesystem>
 #include <iostream>
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
+
 namespace {
+
+// 소스는 서명 있는 UTF-8(BOM)로 저장되어 있으나, Windows 콘솔의 기본 코드페이지는
+// 로캘에 따라 CP949/CP437 등으로 설정되어 있어 UTF-8 출력이 그대로 깨져 보인다.
+// 콘솔 입출력 코드페이지를 UTF-8(65001)로 맞춰 한글이 항상 정상적으로 표시되게 한다.
+void ConfigureConsoleForUtf8() {
+#ifdef _WIN32
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+#endif
+}
 
 // 실행 파일 위치와 무관하게 항상 프로젝트 data/ 폴더를 사용하도록 보장한다.
 void EnsureDataDirectoryExists() {
@@ -36,6 +51,8 @@ bool HasSeedOption(int argc, char** argv) {
 } // namespace
 
 int main(int argc, char** argv) {
+    ConfigureConsoleForUtf8();
+
 #ifdef _DEBUG
     const int failedTests = TestFramework::RunAllTests();
     if (failedTests > 0) {
